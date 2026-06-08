@@ -24,6 +24,22 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     });
     setSettings(map);
     setLoading(false);
+
+    // Update OG/meta tags dynamically from settings
+    const logoUrl = map['store_logo_url'];
+    const storeName = map['store_name'];
+    if (logoUrl) {
+      document.querySelectorAll('meta[property="og:image"], meta[name="twitter:image"]').forEach(el => {
+        (el as HTMLMetaElement).content = logoUrl;
+      });
+      (document.querySelector('link[rel="icon"]') as HTMLLinkElement | null)?.setAttribute('href', logoUrl);
+    }
+    if (storeName) {
+      document.title = `${storeName} - للأدوات المدرسية والمكتبية`;
+      document.querySelectorAll('meta[property="og:title"], meta[name="twitter:title"]').forEach(el => {
+        (el as HTMLMetaElement).content = `${storeName} - للأدوات المدرسية والمكتبية`;
+      });
+    }
   }, []);
 
   useEffect(() => {

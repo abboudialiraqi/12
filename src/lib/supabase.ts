@@ -30,6 +30,7 @@ export type Product = {
   image_url: string;
   images: string[];
   category_id: string;
+  category_ids: string[];
   sku: string;
   stock: number;
   is_featured: boolean;

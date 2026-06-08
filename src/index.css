@@ -9,8 +9,27 @@
   }
 
   body {
-    @apply text-gray-900 antialiased;
+    @apply text-gray-900 antialiased bg-white;
   }
+
+  html.dark body {
+    @apply bg-gray-950 text-gray-100;
+  }
+
+  /* Dark mode overrides for common surfaces */
+  html.dark .bg-white { background-color: #1a1a2e !important; }
+  html.dark .bg-gray-50 { background-color: #16213e !important; }
+  html.dark .bg-gray-100 { background-color: #1e2a4a !important; }
+  html.dark .border-gray-100 { border-color: #2d3748 !important; }
+  html.dark .border-gray-200 { border-color: #374151 !important; }
+  html.dark .text-gray-900 { color: #f1f5f9 !important; }
+  html.dark .text-gray-800 { color: #e2e8f0 !important; }
+  html.dark .text-gray-700 { color: #cbd5e1 !important; }
+  html.dark .text-gray-600 { color: #94a3b8 !important; }
+  html.dark .text-gray-500 { color: #64748b !important; }
+  html.dark .shadow-sm { box-shadow: 0 1px 2px rgba(0,0,0,0.4) !important; }
+  html.dark .shadow-md { box-shadow: 0 4px 6px rgba(0,0,0,0.5) !important; }
+  html.dark .shadow-xl { box-shadow: 0 20px 25px rgba(0,0,0,0.5) !important; }
 
   * {
     scrollbar-width: thin;

@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import {
   ShoppingCart, Menu, X, Search, Settings, LogOut, User,
-  Home, Package, Tag, ChevronLeft, ChevronRight, LayoutGrid
+  Home, Package, Tag, ChevronLeft, ChevronRight, LayoutGrid, Moon, Sun
 } from 'lucide-react';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
 import { useCustomer } from '../hooks/useCustomer';
 import { useSettings } from '../hooks/useSettings';
+import { useTheme } from '../hooks/useTheme';
 import { supabase, type Category } from '../lib/supabase';
 
 type Page = 'home' | 'products' | 'cart' | 'checkout' | 'product-detail' | 'admin' | 'login' | 'account';
@@ -33,6 +34,7 @@ export default function Header({ currentPage, onNavigate, onSearch, selectedCate
   const { isAdmin, signOut: adminSignOut } = useAuth();
   const { customer } = useCustomer();
   const { get } = useSettings();
+  const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -191,6 +193,15 @@ export default function Header({ currentPage, onNavigate, onSearch, selectedCate
                   </ActionIcon>
                 </>
               )}
+
+              {/* Dark/light toggle */}
+              <button
+                onClick={toggleTheme}
+                title={theme === 'dark' ? 'الوضع النهاري' : 'الوضع الليلي'}
+                className="p-2 rounded-lg text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all duration-150"
+              >
+                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
 
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

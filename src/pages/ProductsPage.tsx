@@ -49,9 +49,10 @@ export default function ProductsPage({ selectedCategory, onCategorySelect, searc
               .select('id')
               .eq('parent_id', catData.id);
             const ids = [catData.id, ...(children || []).map((c: { id: string }) => c.id)];
-            query = query.in('category_id', ids);
+            // match primary category OR any of the additional category_ids
+            query = query.or(`category_id.in.(${ids.join(',')}),category_ids.ov.{${ids.join(',')}}`);
           } else {
-            query = query.eq('category_id', catData.id);
+            query = query.or(`category_id.eq.${catData.id},category_ids.ov.{${catData.id}}`);
           }
         }
       }

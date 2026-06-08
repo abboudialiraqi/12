@@ -49,6 +49,7 @@ type ProductForm = {
   images: string[];
   color_images: Record<string, string>;
   category_id: string;
+  category_ids: string[];
   sku: string;
   stock: string;
   is_featured: boolean;
@@ -65,6 +66,7 @@ const emptyProductForm: ProductForm = {
   images: [],
   color_images: {},
   category_id: '',
+  category_ids: [],
   sku: '',
   stock: '0',
   is_featured: false,
@@ -248,13 +250,12 @@ const SETTING_SECTIONS: SettingSection[] = [
   {
     id: 'reviews',
     label: 'آراء الزبائن',
-    desc: 'رابط هايلايت إنستغرام لآراء الزبائن',
+    desc: 'منشورات إنستغرام لآراء الزبائن',
     icon: Star,
     color: 'text-pink-600 bg-pink-50',
     fields: [
       { key: 'reviews_title',          label: 'عنوان قسم الآراء',                 placeholder: 'ماذا يقول زبائننا؟' },
       { key: 'reviews_subtitle',       label: 'وصف قسم الآراء',                   placeholder: 'آراء حقيقية من زبائن سعداء' },
-      { key: 'reviews_instagram_url',  label: 'رابط هايلايت الآراء (إنستغرام)',   placeholder: 'https://www.instagram.com/stories/highlights/...', ltr: true },
       { key: 'reviews_instagram_user', label: 'اسم حساب الإنستغرام (للعرض)',      placeholder: '@suhab.iq' },
     ],
   },
@@ -288,6 +289,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
   const [settingsSaved, setSettingsSaved] = useState(false);
   const [activeSettingSection, setActiveSettingSection] = useState<string>('store');
   const [promoBanners, setPromoBanners] = useState<{ id: string; image: string; link: string; position: string; width: string; height: string }[]>([]);
+  const [instagramPosts, setInstagramPosts] = useState<{ id: string; url: string }[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -326,6 +328,12 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
         setPromoBanners(parsed);
       } catch {
         setPromoBanners([]);
+      }
+      try {
+        const parsed = JSON.parse(settings['instagram_posts'] || '[]');
+        setInstagramPosts(parsed);
+      } catch {
+        setInstagramPosts([]);
       }
     }
     if (tab === 'customers') fetchCustomers();
@@ -367,17 +375,21 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
     }
     setAddingAdmin(true);
     try {
-      // Create user via admin API (service role key needed for signUp without confirmation)
-      const { data, error } = await supabase.auth.admin.createUser({
-        email: newAdminEmail.trim(),
-        password: newAdminPassword,
-        app_metadata: { role: 'admin' },
-        email_confirm: true,
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-admin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'Apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ email: newAdminEmail.trim(), password: newAdminPassword }),
       });
-      if (error) throw error;
-      if (data.user) {
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'فشل إنشاء المستخدم');
+      if (json.user) {
         await supabase.from('admins').insert({
-          user_id: data.user.id,
+          user_id: json.user.id,
           email: newAdminEmail.trim(),
         });
         setNewAdminEmail('');
@@ -479,6 +491,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
         images: allImages,
         color_images: productForm.color_images,
         category_id: productForm.category_id || null,
+        category_ids: productForm.category_ids.filter(Boolean),
         sku: productForm.sku,
         stock: parseInt(productForm.stock) || 0,
         is_featured: productForm.is_featured,
@@ -529,6 +542,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
       images: existingImages,
       color_images: (product as any).color_images || {},
       category_id: product.category_id || '',
+      category_ids: product.category_ids || [],
       sku: product.sku || '',
       stock: product.stock?.toString() || '0',
       is_featured: product.is_featured || false,
@@ -682,9 +696,15 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
     return name.replace(/\s+/g, '-').replace(/[^\w\u0600-\u06FF-]/g, '').toLowerCase();
   };
 
-  const filteredProducts = products.filter(p =>
-    p.name.includes(searchQuery) || p.description?.includes(searchQuery)
-  );
+  const [productFilter, setProductFilter] = useState<'all' | 'out_of_stock' | 'hidden'>('all');
+
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = p.name.includes(searchQuery) || p.description?.includes(searchQuery);
+    if (!matchesSearch) return false;
+    if (productFilter === 'out_of_stock') return p.stock === 0;
+    if (productFilter === 'hidden') return !p.is_active;
+    return true;
+  });
 
   if (authLoading) {
     return (
@@ -743,7 +763,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
       {/* ===== Products Tab ===== */}
       {tab === 'products' && (
         <div>
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-3 mb-3">
             <input
               type="text"
               value={searchQuery}
@@ -758,6 +778,25 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
               <Plus className="w-4 h-4" />
               إضافة منتج
             </button>
+          </div>
+
+          {/* Product filter tabs */}
+          <div className="flex gap-2 mb-4">
+            {[
+              { key: 'all',          label: `الكل (${products.length})`,                                                     color: 'bg-gray-100 text-gray-700 hover:bg-gray-200' },
+              { key: 'out_of_stock', label: `نفد المخزون (${products.filter(p => p.stock === 0).length})`,                   color: 'bg-red-50 text-red-600 hover:bg-red-100' },
+              { key: 'hidden',       label: `مخفية (${products.filter(p => !p.is_active).length})`,                         color: 'bg-gray-50 text-gray-500 hover:bg-gray-100' },
+            ].map(({ key, label, color }) => (
+              <button
+                key={key}
+                onClick={() => setProductFilter(key as typeof productFilter)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  productFilter === key ? 'ring-2 ring-emerald-500 ' + color : color
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
           {/* Product Form Modal */}
@@ -785,7 +824,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">القسم</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">القسم الرئيسي</label>
                       <div className="relative">
                         <select
                           value={productForm.category_id}
@@ -800,6 +839,38 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                         <ChevronDown className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                       </div>
                     </div>
+                  </div>
+
+                  {/* Additional categories */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">أقسام إضافية (اختياري)</label>
+                    <div className="flex flex-wrap gap-2">
+                      {categories.filter(c => c.id !== productForm.category_id).map(cat => {
+                        const isSelected = productForm.category_ids.includes(cat.id);
+                        return (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => setProductForm(prev => ({
+                              ...prev,
+                              category_ids: isSelected
+                                ? prev.category_ids.filter(id => id !== cat.id)
+                                : [...prev.category_ids, cat.id],
+                            }))}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                              isSelected
+                                ? 'bg-emerald-600 text-white border-emerald-600'
+                                : 'bg-white text-gray-600 border-gray-200 hover:border-emerald-400'
+                            }`}
+                          >
+                            {cat.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {productForm.category_ids.length > 0 && (
+                      <p className="text-[11px] text-gray-400 mt-1">يظهر المنتج في {productForm.category_ids.length + (productForm.category_id ? 1 : 0)} قسم</p>
+                    )}
                   </div>
 
                   <div>
@@ -2071,6 +2142,119 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
           <div className="flex-1 min-w-0">
             {SETTING_SECTIONS.filter(s => s.id === activeSettingSection).map(section => {
               const Icon = section.icon;
+
+              // Special handling for instagram reviews posts
+              if (section.id === 'reviews') {
+                const saveReviews = async () => {
+                  setSettingsSaving(true);
+                  const postsJson = JSON.stringify(instagramPosts);
+                  const updates = [
+                    { key: 'instagram_posts', value: postsJson, updated_at: new Date().toISOString() },
+                    ...section.fields.map(f => ({ key: f.key, value: settingsForm[f.key] || '', updated_at: new Date().toISOString() })),
+                  ];
+                  await supabase.from('site_settings').upsert(updates, { onConflict: 'key' });
+                  await refreshSettings();
+                  setSettingsSaving(false);
+                  setSettingsSaved(true);
+                  setTimeout(() => setSettingsSaved(false), 2000);
+                };
+                const addPost = () => {
+                  setInstagramPosts(prev => [...prev, { id: Date.now().toString(), url: '' }]);
+                };
+                const updatePost = (id: string, url: string) => {
+                  setInstagramPosts(prev => prev.map(p => p.id === id ? { ...p, url } : p));
+                };
+                const removePost = (id: string) => {
+                  setInstagramPosts(prev => prev.filter(p => p.id !== id));
+                };
+                return (
+                  <div key={section.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                    <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${section.color}`}>
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-gray-900">{section.label}</h3>
+                          <p className="text-xs text-gray-500 mt-0.5">{section.desc}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={addPost}
+                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors flex items-center gap-2"
+                        >
+                          <Plus className="w-4 h-4" />
+                          إضافة منشور
+                        </button>
+                        <button
+                          onClick={saveReviews}
+                          disabled={settingsSaving}
+                          className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                        >
+                          {settingsSaving ? (
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          ) : settingsSaved ? (
+                            <><CheckCircle className="w-4 h-4" />تم الحفظ</>
+                          ) : (
+                            <><SaveAll className="w-4 h-4" />حفظ</>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-6 space-y-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {section.fields.map(field => (
+                          <div key={field.key}>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
+                            <input
+                              value={settingsForm[field.key] || ''}
+                              onChange={e => setSettingsForm(prev => ({ ...prev, [field.key]: e.target.value }))}
+                              className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                              placeholder={field.placeholder}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <div className="border-t border-gray-100 pt-4">
+                        <p className="text-sm font-semibold text-gray-700 mb-3">منشورات إنستغرام المعروضة</p>
+                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4 text-xs text-blue-700">
+                          أضف روابط منشورات إنستغرام (reels أو posts) — مثال: <span dir="ltr">https://www.instagram.com/p/SHORTCODE/</span>
+                        </div>
+                        {instagramPosts.length === 0 ? (
+                          <div className="py-10 text-center text-gray-400">
+                            <svg className="w-10 h-10 text-gray-200 mx-auto mb-3" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+                            </svg>
+                            <p className="text-sm">لا توجد منشورات. اضغط "إضافة منشور".</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {instagramPosts.map((post, idx) => (
+                              <div key={post.id} className="flex items-center gap-3 border border-gray-200 rounded-xl p-3">
+                                <span className="text-xs font-semibold text-gray-400 w-5 shrink-0">{idx + 1}</span>
+                                <input
+                                  value={post.url}
+                                  onChange={e => updatePost(post.id, e.target.value)}
+                                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                                  placeholder="https://www.instagram.com/p/..."
+                                  dir="ltr"
+                                />
+                                <button
+                                  onClick={() => removePost(post.id)}
+                                  className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
 
               // Special handling for promo banners
               if (section.id === 'promo_banners') {

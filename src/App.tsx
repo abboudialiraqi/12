@@ -1,8 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { CartProvider } from './hooks/useCart';
 import { AuthProvider } from './hooks/useAuth';
 import { SettingsProvider } from './hooks/useSettings';
 import { CustomerProvider } from './hooks/useCustomer';
+import { ThemeProvider } from './hooks/useTheme';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
@@ -17,19 +18,43 @@ import type { Product } from './lib/supabase';
 
 type Page = 'home' | 'products' | 'cart' | 'checkout' | 'product-detail' | 'admin' | 'login' | 'account';
 
+type PageState = {
+  page: Page;
+  category?: string | null;
+  productId?: string;
+  scrollY?: number;
+};
+
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProductId, setSelectedProductId] = useState('');
   const [saleOnly, setSaleOnly] = useState(false);
+  const historyStack = useRef<PageState[]>([{ page: 'home' }]);
 
   const handleNavigate = useCallback((page: Page, data?: Record<string, string>) => {
     if (page === 'product-detail' && data?.productId) {
       setSelectedProductId(data.productId);
     }
+    historyStack.current.push({ page, scrollY: window.scrollY });
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const handleBack = useCallback(() => {
+    const stack = historyStack.current;
+    if (stack.length <= 1) {
+      setCurrentPage('home');
+      return;
+    }
+    stack.pop();
+    const prev = stack[stack.length - 1];
+    if (prev.category !== undefined) setSelectedCategory(prev.category ?? null);
+    if (prev.productId) setSelectedProductId(prev.productId);
+    setCurrentPage(prev.page);
+    const savedY = prev.scrollY ?? 0;
+    setTimeout(() => window.scrollTo({ top: savedY, behavior: 'instant' as ScrollBehavior }), 50);
   }, []);
 
   const handleCategorySelect = useCallback((slug: string | null) => {
@@ -41,6 +66,7 @@ function AppContent() {
     setSaleOnly(true);
     setSelectedCategory(null);
     setSearchQuery('');
+    historyStack.current.push({ page: 'products', scrollY: 0 });
     setCurrentPage('products');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
@@ -50,10 +76,15 @@ function AppContent() {
   }, []);
 
   const handleViewDetail = useCallback((product: Product) => {
+    historyStack.current.push({
+      page: currentPage === 'products' ? 'products' : 'home',
+      category: selectedCategory,
+      scrollY: window.scrollY,
+    });
     setSelectedProductId(product.id);
     setCurrentPage('product-detail');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+  }, [currentPage, selectedCategory]);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -81,7 +112,7 @@ function AppContent() {
         return (
           <ProductDetailPage
             productId={selectedProductId}
-            onBack={() => handleNavigate('products')}
+            onBack={handleBack}
             onViewDetail={handleViewDetail}
           />
         );
@@ -118,14 +149,16 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <SettingsProvider>
-        <CustomerProvider>
-          <CartProvider>
-            <AppContent />
-          </CartProvider>
-        </CustomerProvider>
-      </SettingsProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <SettingsProvider>
+          <CustomerProvider>
+            <CartProvider>
+              <AppContent />
+            </CartProvider>
+          </CustomerProvider>
+        </SettingsProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
