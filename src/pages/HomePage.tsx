@@ -95,13 +95,56 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
     promoBanners = [];
   }
 
-  type VideoBanner = { id: string; url: string; poster: string; position: string; title: string };
+  type VideoBanner = { id: string; url: string; poster: string; position: string; title: string; maxHeight?: string; width?: string };
   let videoBanners: VideoBanner[] = [];
   try {
     videoBanners = JSON.parse(get('video_banners', '[]'));
   } catch {
     videoBanners = [];
   }
+
+  // Customer photos section
+  type CustomerPhoto = { id: string; image: string; username: string; caption: string };
+  let customerPhotosData: CustomerPhoto[] = [];
+  try { customerPhotosData = JSON.parse(get('customer_photos', '[]')); } catch { customerPhotosData = []; }
+  const customerPhotosPosition = get('customer_photos_position', 'before_why_us');
+  const cardW = parseInt(get('customer_photos_card_w', '180'), 10) || 180;
+  const cardH = parseInt(get('customer_photos_card_h', '280'), 10) || 280;
+  const validPhotos = customerPhotosData.filter(p => p.image);
+  const customerPhotosSection = validPhotos.length > 0 ? (
+    <section className="bg-white py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <h2 className="text-xl font-bold text-gray-900 text-center mb-6">{get('customer_photos_title', 'مشاركات الزبائن')}</h2>
+        <div className="overflow-x-auto pb-2 -mx-4 px-4" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex gap-3" style={{ width: 'max-content' }}>
+            {validPhotos.map(photo => (
+              <div
+                key={photo.id}
+                className="relative shrink-0 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-200 group"
+                style={{ width: cardW, height: cardH }}
+              >
+                <img src={photo.image} alt={photo.username || ''} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
+                {photo.username && (
+                  <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center shrink-0">
+                      <span className="text-white text-[9px] font-bold">{photo.username.replace('@','').charAt(0).toUpperCase()}</span>
+                    </div>
+                    <span className="text-white text-xs font-semibold drop-shadow leading-none">{photo.username}</span>
+                  </div>
+                )}
+                {photo.caption && (
+                  <div className="absolute bottom-2.5 right-2.5 left-2.5">
+                    <p className="text-white text-xs leading-snug drop-shadow line-clamp-2">{photo.caption}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  ) : null;
 
   const nextBanner = useCallback(() => setCurrentBanner(p => (p + 1) % banners.length), [banners.length]);
   const prevBanner = useCallback(() => setCurrentBanner(p => (p - 1 + banners.length) % banners.length), [banners.length]);
@@ -361,7 +404,7 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
       {/* ── Video Banners (top) ── */}
       {videoBanners.filter(v => v.url && (!v.position || v.position === 'top')).map(v => (
         <section key={v.id} className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-          <div className="rounded-2xl overflow-hidden shadow-md">
+          <div className="rounded-2xl overflow-hidden shadow-md" style={{ width: v.width && v.width !== '100%' ? v.width : undefined }}>
             {v.title && <p className="text-center text-sm font-semibold text-gray-700 py-2 bg-gray-50">{v.title}</p>}
             <video
               src={v.url}
@@ -371,11 +414,14 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
               loop
               playsInline
               controls
-              className="w-full max-h-[480px] object-cover bg-black"
+              style={{ maxHeight: v.maxHeight ? `${v.maxHeight}px` : '480px' }}
+              className="w-full object-cover bg-black"
             />
           </div>
         </section>
       ))}
+
+      {customerPhotosPosition === 'top' && customerPhotosSection}
 
       {/* ── Featured Products ── */}
       <section className="bg-gray-50">
@@ -419,6 +465,8 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
         </div>
       </section>
 
+      {customerPhotosPosition === 'after_featured' && customerPhotosSection}
+
       {/* ── Promo Banners (middle) ── */}
       {promoBanners.filter(pb => pb.position === 'middle').length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
@@ -444,9 +492,9 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
       {/* ── Video Banners (middle) ── */}
       {videoBanners.filter(v => v.url && v.position === 'middle').map(v => (
         <section key={v.id} className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-          <div className="rounded-2xl overflow-hidden shadow-md">
+          <div className="rounded-2xl overflow-hidden shadow-md" style={{ width: v.width && v.width !== '100%' ? v.width : undefined }}>
             {v.title && <p className="text-center text-sm font-semibold text-gray-700 py-2 bg-gray-50">{v.title}</p>}
-            <video src={v.url} poster={v.poster || undefined} autoPlay muted loop playsInline controls className="w-full max-h-[480px] object-cover bg-black" />
+            <video src={v.url} poster={v.poster || undefined} autoPlay muted loop playsInline controls style={{ maxHeight: v.maxHeight ? `${v.maxHeight}px` : '480px' }} className="w-full object-cover bg-black" />
           </div>
         </section>
       ))}
@@ -477,6 +525,8 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
           </div>
         </section>
       )}
+
+      {customerPhotosPosition === 'after_sale' && customerPhotosSection}
 
       {/* ── New Arrivals ── */}
       {newProducts.length > 0 && (
@@ -530,12 +580,14 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
       {/* ── Video Banners (bottom) ── */}
       {videoBanners.filter(v => v.url && v.position === 'bottom').map(v => (
         <section key={v.id} className="max-w-7xl mx-auto px-4 sm:px-6 py-4 pb-10">
-          <div className="rounded-2xl overflow-hidden shadow-md">
+          <div className="rounded-2xl overflow-hidden shadow-md" style={{ width: v.width && v.width !== '100%' ? v.width : undefined }}>
             {v.title && <p className="text-center text-sm font-semibold text-gray-700 py-2 bg-gray-50">{v.title}</p>}
-            <video src={v.url} poster={v.poster || undefined} autoPlay muted loop playsInline controls className="w-full max-h-[480px] object-cover bg-black" />
+            <video src={v.url} poster={v.poster || undefined} autoPlay muted loop playsInline controls style={{ maxHeight: v.maxHeight ? `${v.maxHeight}px` : '480px' }} className="w-full object-cover bg-black" />
           </div>
         </section>
       ))}
+
+      {customerPhotosPosition === 'before_why_us' && customerPhotosSection}
 
       {/* ── Why Us ── */}
       <section className="bg-gray-900 text-white">
@@ -558,56 +610,7 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
         </div>
       </section>
 
-      {/* ── Customer Photos (مشاركات الزبائن) ── */}
-      {(() => {
-        type CustomerPhoto = { id: string; image: string; username: string; caption: string };
-        let photos: CustomerPhoto[] = [];
-        try { photos = JSON.parse(get('customer_photos', '[]')); } catch { photos = []; }
-        const valid = photos.filter(p => p.image);
-        if (valid.length === 0) return null;
-        const title = get('customer_photos_title', 'مشاركات الزبائن');
-        return (
-          <section className="bg-white py-12">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6">
-              <h2 className="text-xl font-bold text-gray-900 text-center mb-6">{title}</h2>
-              <div className="overflow-x-auto pb-2 -mx-4 px-4" style={{ scrollbarWidth: 'none' }}>
-                <div className="flex gap-3" style={{ width: 'max-content' }}>
-                  {valid.map(photo => (
-                    <div
-                      key={photo.id}
-                      className="relative shrink-0 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-200 group"
-                      style={{ width: 180, height: 280 }}
-                    >
-                      <img
-                        src={photo.image}
-                        alt={photo.username || ''}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      {/* dark overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
-                      {/* username top */}
-                      {photo.username && (
-                        <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
-                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center shrink-0">
-                            <span className="text-white text-[9px] font-bold">{photo.username.replace('@','').charAt(0).toUpperCase()}</span>
-                          </div>
-                          <span className="text-white text-xs font-semibold drop-shadow leading-none">{photo.username}</span>
-                        </div>
-                      )}
-                      {/* caption bottom */}
-                      {photo.caption && (
-                        <div className="absolute bottom-2.5 right-2.5 left-2.5">
-                          <p className="text-white text-xs leading-snug drop-shadow line-clamp-2">{photo.caption}</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-        );
-      })()}
+      {customerPhotosPosition === 'bottom' && customerPhotosSection}
 
     </div>
   );

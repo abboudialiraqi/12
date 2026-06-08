@@ -282,7 +282,10 @@ const SETTING_SECTIONS: SettingSection[] = [
     icon: Star,
     color: 'text-pink-600 bg-pink-50',
     fields: [
-      { key: 'customer_photos_title', label: 'عنوان القسم', placeholder: 'مشاركات الزبائن' },
+      { key: 'customer_photos_title',    label: 'عنوان القسم',                                             placeholder: 'مشاركات الزبائن' },
+      { key: 'customer_photos_position', label: 'موضع القسم في الصفحة',                                   placeholder: 'before_why_us', ltr: true },
+      { key: 'customer_photos_card_w',   label: 'عرض البطاقة (px) — مثال: 180',                          placeholder: '180', ltr: true },
+      { key: 'customer_photos_card_h',   label: 'ارتفاع البطاقة (px) — مثال: 280',                       placeholder: '280', ltr: true },
     ],
   },
 ];
@@ -308,7 +311,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
   const [activeSettingSection, setActiveSettingSection] = useState<string>('store');
   const [promoBanners, setPromoBanners] = useState<{ id: string; image: string; link: string; position: string; width: string; height: string }[]>([]);
   const [instagramPosts, setInstagramPosts] = useState<{ id: string; url: string }[]>([]);
-  const [videoBanners, setVideoBanners] = useState<{ id: string; url: string; poster: string; position: string; title: string }[]>([]);
+  const [videoBanners, setVideoBanners] = useState<{ id: string; url: string; poster: string; position: string; title: string; maxHeight: string; width: string }[]>([]);
   const [customerPhotos, setCustomerPhotos] = useState<{ id: string; image: string; username: string; caption: string }[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
@@ -2454,7 +2457,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                   setTimeout(() => setSettingsSaved(false), 2000);
                 };
                 const addVideo = () => {
-                  setVideoBanners(prev => [...prev, { id: Date.now().toString(), url: '', poster: '', position: 'middle', title: '' }]);
+                  setVideoBanners(prev => [...prev, { id: Date.now().toString(), url: '', poster: '', position: 'middle', title: '', maxHeight: '480', width: '100%' }]);
                 };
                 const updateVideo = (id: string, field: string, value: string) => {
                   setVideoBanners(prev => prev.map(v => v.id === id ? { ...v, [field]: value } : v));
@@ -2528,6 +2531,16 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                                 <label className="block text-xs font-medium text-gray-600 mb-1">عنوان الفيديو (اختياري)</label>
                                 <input value={vid.title} onChange={e => updateVideo(vid.id, 'title', e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400" placeholder="مثال: شاهد كيف نصنع الفرق" />
                               </div>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-600 mb-1">عرض الفيديو — مثال: 100% أو 800px</label>
+                                  <input value={vid.width} onChange={e => updateVideo(vid.id, 'width', e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400" placeholder="100%" dir="ltr" />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-600 mb-1">أقصى ارتفاع (px) — مثال: 480</label>
+                                  <input value={vid.maxHeight} onChange={e => updateVideo(vid.id, 'maxHeight', e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400" placeholder="480" dir="ltr" />
+                                </div>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -2586,7 +2599,17 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                       {section.fields.map(field => (
                         <div key={field.key}>
                           <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
-                          <input value={settingsForm[field.key] || ''} onChange={e => setSettingsForm(prev => ({ ...prev, [field.key]: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder={field.placeholder} />
+                          {field.key === 'customer_photos_position' ? (
+                            <select value={settingsForm[field.key] || 'before_why_us'} onChange={e => setSettingsForm(prev => ({ ...prev, [field.key]: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                              <option value="top">أعلى الصفحة (بعد الهيرو)</option>
+                              <option value="after_featured">بعد المنتجات المميزة</option>
+                              <option value="after_sale">بعد قسم العروض</option>
+                              <option value="before_why_us">قبل لماذا نختار سحاب (افتراضي)</option>
+                              <option value="bottom">أسفل الصفحة</option>
+                            </select>
+                          ) : (
+                            <input value={settingsForm[field.key] || ''} onChange={e => setSettingsForm(prev => ({ ...prev, [field.key]: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder={field.placeholder} dir={field.ltr ? 'ltr' : undefined} />
+                          )}
                         </div>
                       ))}
                       <div className="border-t border-gray-100 pt-4">
