@@ -267,6 +267,24 @@ const SETTING_SECTIONS: SettingSection[] = [
     color: 'text-rose-600 bg-rose-50',
     fields: [],
   },
+  {
+    id: 'video_banners',
+    label: 'فيديوهات البنر',
+    desc: 'إضافة فيديوهات تُعرض في الصفحة الرئيسية',
+    icon: Star,
+    color: 'text-purple-600 bg-purple-50',
+    fields: [],
+  },
+  {
+    id: 'customer_photos',
+    label: 'مشاركات الزبائن',
+    desc: 'صور الزبائن المعروضة في الصفحة الرئيسية',
+    icon: Star,
+    color: 'text-pink-600 bg-pink-50',
+    fields: [
+      { key: 'customer_photos_title', label: 'عنوان القسم', placeholder: 'مشاركات الزبائن' },
+    ],
+  },
 ];
 
 export default function AdminPage({ onNavigate }: AdminPageProps) {
@@ -290,6 +308,8 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
   const [activeSettingSection, setActiveSettingSection] = useState<string>('store');
   const [promoBanners, setPromoBanners] = useState<{ id: string; image: string; link: string; position: string; width: string; height: string }[]>([]);
   const [instagramPosts, setInstagramPosts] = useState<{ id: string; url: string }[]>([]);
+  const [videoBanners, setVideoBanners] = useState<{ id: string; url: string; poster: string; position: string; title: string }[]>([]);
+  const [customerPhotos, setCustomerPhotos] = useState<{ id: string; image: string; username: string; caption: string }[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -334,6 +354,18 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
         setInstagramPosts(parsed);
       } catch {
         setInstagramPosts([]);
+      }
+      try {
+        const parsed = JSON.parse(settings['video_banners'] || '[]');
+        setVideoBanners(parsed);
+      } catch {
+        setVideoBanners([]);
+      }
+      try {
+        const parsed = JSON.parse(settings['customer_photos'] || '[]');
+        setCustomerPhotos(parsed);
+      } catch {
+        setCustomerPhotos([]);
       }
     }
     if (tab === 'customers') fetchCustomers();
@@ -2405,6 +2437,203 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                           ))}
                         </div>
                       )}
+                    </div>
+                  </div>
+                );
+              }
+
+              // Special handling for video banners
+              if (section.id === 'video_banners') {
+                const saveVideoBanners = async () => {
+                  setSettingsSaving(true);
+                  const json = JSON.stringify(videoBanners);
+                  await supabase.from('site_settings').upsert({ key: 'video_banners', value: json, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+                  await refreshSettings();
+                  setSettingsSaving(false);
+                  setSettingsSaved(true);
+                  setTimeout(() => setSettingsSaved(false), 2000);
+                };
+                const addVideo = () => {
+                  setVideoBanners(prev => [...prev, { id: Date.now().toString(), url: '', poster: '', position: 'middle', title: '' }]);
+                };
+                const updateVideo = (id: string, field: string, value: string) => {
+                  setVideoBanners(prev => prev.map(v => v.id === id ? { ...v, [field]: value } : v));
+                };
+                const removeVideo = (id: string) => {
+                  setVideoBanners(prev => prev.filter(v => v.id !== id));
+                };
+                return (
+                  <div key={section.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                    <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${section.color}`}>
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-gray-900">{section.label}</h3>
+                          <p className="text-xs text-gray-500 mt-0.5">{section.desc}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button onClick={addVideo} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors flex items-center gap-2">
+                          <Plus className="w-4 h-4" />فيديو جديد
+                        </button>
+                        <button onClick={saveVideoBanners} disabled={settingsSaving} className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center gap-2">
+                          {settingsSaving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : settingsSaved ? <><CheckCircle className="w-4 h-4" />تم الحفظ</> : <><SaveAll className="w-4 h-4" />حفظ</>}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5 text-sm text-amber-700">
+                        <p className="font-semibold mb-1">ملاحظة:</p>
+                        <ul className="text-xs space-y-1 list-disc list-inside">
+                          <li>أضف رابط مباشر للفيديو (mp4, webm) — يُفضل رفعه على Supabase Storage أو أي CDN</li>
+                          <li>الموضع: top = أعلى الصفحة، middle = بين الأقسام، bottom = أسفل الصفحة</li>
+                          <li>صورة الغلاف (poster) تظهر قبل تشغيل الفيديو</li>
+                        </ul>
+                      </div>
+                      {videoBanners.length === 0 ? (
+                        <div className="py-12 text-center text-gray-400">
+                          <p className="text-sm">لا توجد فيديوهات. اضغط "فيديو جديد" للإضافة.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {videoBanners.map((vid, idx) => (
+                            <div key={vid.id} className="border border-gray-200 rounded-xl p-4 space-y-3">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-semibold text-gray-700">فيديو {idx + 1}</span>
+                                <button onClick={() => removeVideo(vid.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">رابط الفيديو (mp4)</label>
+                                <input value={vid.url} onChange={e => updateVideo(vid.id, 'url', e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400" placeholder="https://...video.mp4" dir="ltr" />
+                              </div>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-600 mb-1">صورة الغلاف (اختياري)</label>
+                                  <input value={vid.poster} onChange={e => updateVideo(vid.id, 'poster', e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400" placeholder="https://...image.jpg" dir="ltr" />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-600 mb-1">الموضع</label>
+                                  <select value={vid.position} onChange={e => updateVideo(vid.id, 'position', e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white">
+                                    <option value="top">أعلى الصفحة (top)</option>
+                                    <option value="middle">بين الأقسام (middle)</option>
+                                    <option value="bottom">أسفل الصفحة (bottom)</option>
+                                  </select>
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">عنوان الفيديو (اختياري)</label>
+                                <input value={vid.title} onChange={e => updateVideo(vid.id, 'title', e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400" placeholder="مثال: شاهد كيف نصنع الفرق" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              }
+
+              // Special handling for customer photos
+              if (section.id === 'customer_photos') {
+                const saveCustomerPhotos = async () => {
+                  setSettingsSaving(true);
+                  const json = JSON.stringify(customerPhotos);
+                  const updates = [
+                    { key: 'customer_photos', value: json, updated_at: new Date().toISOString() },
+                    ...section.fields.map(f => ({ key: f.key, value: settingsForm[f.key] || '', updated_at: new Date().toISOString() })),
+                  ];
+                  await supabase.from('site_settings').upsert(updates, { onConflict: 'key' });
+                  await refreshSettings();
+                  setSettingsSaving(false);
+                  setSettingsSaved(true);
+                  setTimeout(() => setSettingsSaved(false), 2000);
+                };
+                const addPhoto = () => {
+                  setCustomerPhotos(prev => [...prev, { id: Date.now().toString(), image: '', username: '', caption: '' }]);
+                };
+                const updatePhoto = (id: string, field: string, value: string) => {
+                  setCustomerPhotos(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
+                };
+                const removePhoto = (id: string) => {
+                  setCustomerPhotos(prev => prev.filter(p => p.id !== id));
+                };
+                return (
+                  <div key={section.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+                    <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${section.color}`}>
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-gray-900">{section.label}</h3>
+                          <p className="text-xs text-gray-500 mt-0.5">{section.desc}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button onClick={addPhoto} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors flex items-center gap-2">
+                          <Plus className="w-4 h-4" />إضافة صورة
+                        </button>
+                        <button onClick={saveCustomerPhotos} disabled={settingsSaving} className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 flex items-center gap-2">
+                          {settingsSaving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : settingsSaved ? <><CheckCircle className="w-4 h-4" />تم الحفظ</> : <><SaveAll className="w-4 h-4" />حفظ</>}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-6 space-y-5">
+                      {section.fields.map(field => (
+                        <div key={field.key}>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
+                          <input value={settingsForm[field.key] || ''} onChange={e => setSettingsForm(prev => ({ ...prev, [field.key]: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder={field.placeholder} />
+                        </div>
+                      ))}
+                      <div className="border-t border-gray-100 pt-4">
+                        <p className="text-sm font-semibold text-gray-700 mb-3">صور الزبائن</p>
+                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4 text-xs text-blue-700">
+                          أضف رابط صورة (URL) لكل صورة + اسم الحساب (اختياري) + وصف قصير (اختياري)
+                        </div>
+                        {customerPhotos.length === 0 ? (
+                          <div className="py-10 text-center text-gray-400">
+                            <p className="text-sm">لا توجد صور. اضغط "إضافة صورة".</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {customerPhotos.map((photo, idx) => (
+                              <div key={photo.id} className="border border-gray-200 rounded-xl p-4 space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-semibold text-gray-500">صورة {idx + 1}</span>
+                                  <button onClick={() => removePhoto(photo.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-600 mb-1">رابط الصورة (URL)</label>
+                                  <div className="flex gap-2">
+                                    <input value={photo.image} onChange={e => updatePhoto(photo.id, 'image', e.target.value)} className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-400" placeholder="https://..." dir="ltr" />
+                                    {photo.image && (
+                                      <div className="w-10 h-10 rounded-lg overflow-hidden border border-gray-200 shrink-0">
+                                        <img src={photo.image} alt="" className="w-full h-full object-cover" />
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">اسم الحساب (@username)</label>
+                                    <input value={photo.username} onChange={e => updatePhoto(photo.id, 'username', e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-400" placeholder="@suhab.iq" dir="ltr" />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">وصف قصير (اختياري)</label>
+                                    <input value={photo.caption} onChange={e => updatePhoto(photo.id, 'caption', e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-pink-400" placeholder="منتجات رائعة..." />
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );

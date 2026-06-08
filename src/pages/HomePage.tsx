@@ -95,6 +95,14 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
     promoBanners = [];
   }
 
+  type VideoBanner = { id: string; url: string; poster: string; position: string; title: string };
+  let videoBanners: VideoBanner[] = [];
+  try {
+    videoBanners = JSON.parse(get('video_banners', '[]'));
+  } catch {
+    videoBanners = [];
+  }
+
   const nextBanner = useCallback(() => setCurrentBanner(p => (p + 1) % banners.length), [banners.length]);
   const prevBanner = useCallback(() => setCurrentBanner(p => (p - 1 + banners.length) % banners.length), [banners.length]);
 
@@ -350,6 +358,25 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
         </section>
       )}
 
+      {/* ── Video Banners (top) ── */}
+      {videoBanners.filter(v => v.url && (!v.position || v.position === 'top')).map(v => (
+        <section key={v.id} className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <div className="rounded-2xl overflow-hidden shadow-md">
+            {v.title && <p className="text-center text-sm font-semibold text-gray-700 py-2 bg-gray-50">{v.title}</p>}
+            <video
+              src={v.url}
+              poster={v.poster || undefined}
+              autoPlay
+              muted
+              loop
+              playsInline
+              controls
+              className="w-full max-h-[480px] object-cover bg-black"
+            />
+          </div>
+        </section>
+      ))}
+
       {/* ── Featured Products ── */}
       <section className="bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
@@ -413,6 +440,16 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
           </div>
         </section>
       )}
+
+      {/* ── Video Banners (middle) ── */}
+      {videoBanners.filter(v => v.url && v.position === 'middle').map(v => (
+        <section key={v.id} className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <div className="rounded-2xl overflow-hidden shadow-md">
+            {v.title && <p className="text-center text-sm font-semibold text-gray-700 py-2 bg-gray-50">{v.title}</p>}
+            <video src={v.url} poster={v.poster || undefined} autoPlay muted loop playsInline controls className="w-full max-h-[480px] object-cover bg-black" />
+          </div>
+        </section>
+      ))}
 
       {/* ── Sale / Offers ── */}
       {saleProducts.length > 0 && (
@@ -490,6 +527,16 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
         </section>
       )}
 
+      {/* ── Video Banners (bottom) ── */}
+      {videoBanners.filter(v => v.url && v.position === 'bottom').map(v => (
+        <section key={v.id} className="max-w-7xl mx-auto px-4 sm:px-6 py-4 pb-10">
+          <div className="rounded-2xl overflow-hidden shadow-md">
+            {v.title && <p className="text-center text-sm font-semibold text-gray-700 py-2 bg-gray-50">{v.title}</p>}
+            <video src={v.url} poster={v.poster || undefined} autoPlay muted loop playsInline controls className="w-full max-h-[480px] object-cover bg-black" />
+          </div>
+        </section>
+      ))}
+
       {/* ── Why Us ── */}
       <section className="bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
@@ -511,56 +558,50 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
         </div>
       </section>
 
-      {/* ── Instagram Customer Reviews ── */}
+      {/* ── Customer Photos (مشاركات الزبائن) ── */}
       {(() => {
-        let instagramPosts: { id: string; url: string }[] = [];
-        try { instagramPosts = JSON.parse(get('instagram_posts', '[]')); } catch { instagramPosts = []; }
-        const hasContent = instagramPosts.length > 0;
-        if (!hasContent) return null;
-
-        const getEmbedUrl = (url: string) => {
-          const match = url.match(/instagram\.com\/(p|reel|tv)\/([A-Za-z0-9_-]+)/);
-          return match ? `https://www.instagram.com/p/${match[2]}/embed/` : null;
-        };
-
-        const validPosts = instagramPosts.filter(p => getEmbedUrl(p.url));
-        if (validPosts.length === 0) return null;
-
+        type CustomerPhoto = { id: string; image: string; username: string; caption: string };
+        let photos: CustomerPhoto[] = [];
+        try { photos = JSON.parse(get('customer_photos', '[]')); } catch { photos = []; }
+        const valid = photos.filter(p => p.image);
+        if (valid.length === 0) return null;
+        const title = get('customer_photos_title', 'مشاركات الزبائن');
         return (
-          <section className="bg-white py-14">
+          <section className="bg-white py-12">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
-              <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
-                    </svg>
-                  </div>
-                  <span className="text-sm font-semibold text-pink-600">{get('reviews_instagram_user', 'إنستغرام')}</span>
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">{get('reviews_title', 'ماذا يقول زبائننا؟')}</h2>
-                <p className="text-gray-500 text-sm">{get('reviews_subtitle', 'آراء حقيقية من زبائن سعداء')}</p>
-              </div>
-              <div className="overflow-x-auto pb-4 -mx-4 px-4" style={{ scrollbarWidth: 'thin' }}>
-                <div className="flex gap-4" style={{ width: 'max-content' }}>
-                  {validPosts.map(post => {
-                    const embedUrl = getEmbedUrl(post.url)!;
-                    return (
-                      <div key={post.id} className="shrink-0 rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow bg-white" style={{ width: 320, height: 420 }}>
-                        <iframe
-                          src={embedUrl}
-                          width="320"
-                          height="420"
-                          frameBorder="0"
-                          scrolling="no"
-                          allowTransparency
-                          allow="encrypted-media"
-                          title={`Instagram post ${post.id}`}
-                          style={{ display: 'block', border: 'none' }}
-                        />
-                      </div>
-                    );
-                  })}
+              <h2 className="text-xl font-bold text-gray-900 text-center mb-6">{title}</h2>
+              <div className="overflow-x-auto pb-2 -mx-4 px-4" style={{ scrollbarWidth: 'none' }}>
+                <div className="flex gap-3" style={{ width: 'max-content' }}>
+                  {valid.map(photo => (
+                    <div
+                      key={photo.id}
+                      className="relative shrink-0 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-200 group"
+                      style={{ width: 180, height: 280 }}
+                    >
+                      <img
+                        src={photo.image}
+                        alt={photo.username || ''}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      {/* dark overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
+                      {/* username top */}
+                      {photo.username && (
+                        <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center shrink-0">
+                            <span className="text-white text-[9px] font-bold">{photo.username.replace('@','').charAt(0).toUpperCase()}</span>
+                          </div>
+                          <span className="text-white text-xs font-semibold drop-shadow leading-none">{photo.username}</span>
+                        </div>
+                      )}
+                      {/* caption bottom */}
+                      {photo.caption && (
+                        <div className="absolute bottom-2.5 right-2.5 left-2.5">
+                          <p className="text-white text-xs leading-snug drop-shadow line-clamp-2">{photo.caption}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
