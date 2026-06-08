@@ -108,8 +108,13 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
   let customerPhotosData: CustomerPhoto[] = [];
   try { customerPhotosData = JSON.parse(get('customer_photos', '[]')); } catch { customerPhotosData = []; }
   const customerPhotosPosition = get('customer_photos_position', 'before_why_us');
-  const cardW = parseInt(get('customer_photos_card_w', '180'), 10) || 180;
-  const cardH = parseInt(get('customer_photos_card_h', '280'), 10) || 280;
+  // Use responsive-specific sizes if set, fall back to the shared customer_photos_card_* keys
+  const cardWMobile  = parseInt(get('card_mobile_w',  get('customer_photos_card_w', '140')), 10) || 140;
+  const cardHMobile  = parseInt(get('card_mobile_h',  get('customer_photos_card_h', '220')), 10) || 220;
+  const cardWDesktop = parseInt(get('card_desktop_w', get('customer_photos_card_w', '180')), 10) || 180;
+  const cardHDesktop = parseInt(get('card_desktop_h', get('customer_photos_card_h', '280')), 10) || 280;
+  const heroMinHeightMobile  = get('hero_min_height_mobile',  '320');
+  const heroMinHeightDesktop = get('hero_min_height_desktop', '500');
   const validPhotos = customerPhotosData.filter(p => p.image);
   const customerPhotosSection = validPhotos.length > 0 ? (
     <section className="bg-white py-12">
@@ -121,7 +126,7 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
               <div
                 key={photo.id}
                 className="relative shrink-0 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-200 group"
-                style={{ width: cardW, height: cardH }}
+                style={{ width: `clamp(${cardWMobile}px, 18vw, ${cardWDesktop}px)`, height: `clamp(${cardHMobile}px, 28vw, ${cardHDesktop}px)` }}
               >
                 <img src={photo.image} alt={photo.username || ''} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
@@ -211,11 +216,15 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
     { icon: Award,      color: 'text-rose-400',    title: get('why_us_4_title', 'منتجات أصلية مضمونة'),    desc: get('why_us_4_desc', 'جودة عالية بأسعار منافسة') },
   ];
 
+  const gridMobile  = get('grid_mobile_cols', '2') === '1' ? 'grid-cols-1' : 'grid-cols-2';
+  const gridDesktop = get('grid_desktop_cols', '4') === '3' ? 'lg:grid-cols-3' : get('grid_desktop_cols', '4') === '5' ? 'lg:grid-cols-5' : 'lg:grid-cols-4';
+  const productGridClass = `grid gap-4 ${gridMobile} sm:grid-cols-3 ${gridDesktop}`;
+
   return (
     <div className="overflow-x-hidden">
 
       {/* ── Hero Slider ── */}
-      <section className="relative text-white overflow-hidden" style={{ minHeight: '360px' }}>
+      <section className="relative text-white overflow-hidden" style={{ minHeight: `clamp(${heroMinHeightMobile}px, 50vw, ${heroMinHeightDesktop}px)` }}>
         <div className="absolute inset-0">
           {banner.img && (
             <img src={banner.img} alt="" className="w-full h-full object-cover" />
@@ -443,7 +452,7 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
             </button>
           </div>
           {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className={productGridClass}>
               {[...Array(8)].map((_, i) => (
                 <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse">
                   <div className="aspect-square bg-gray-200" />
@@ -456,7 +465,7 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className={productGridClass}>
               {featuredProducts.map(product => (
                 <ProductCard key={product.id} product={product} onViewDetail={onViewDetail} />
               ))}
@@ -518,7 +527,7 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
             </button>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className={productGridClass}>
             {saleProducts.map(product => (
               <ProductCard key={product.id} product={product} onViewDetail={onViewDetail} />
             ))}

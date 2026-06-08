@@ -91,6 +91,8 @@
 .animate-ticker {
   animation: ticker 28s linear infinite;
   will-change: transform;
+  display: inline-flex;
+  white-space: nowrap;
 }
 
 .animate-ticker:hover {

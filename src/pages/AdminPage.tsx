@@ -229,6 +229,23 @@ const SETTING_SECTIONS: SettingSection[] = [
     ],
   },
   {
+    id: 'responsive',
+    label: 'القياسات والشبكة',
+    desc: 'التحكم بقياسات العناصر على الموبايل والحاسوب',
+    icon: Star,
+    color: 'text-teal-600 bg-teal-50',
+    fields: [
+      { key: 'grid_mobile_cols',   label: 'عدد أعمدة المنتجات في الموبايل (1 أو 2)', placeholder: '2', ltr: true },
+      { key: 'grid_desktop_cols',  label: 'عدد أعمدة المنتجات في الحاسوب (3 أو 4 أو 5)', placeholder: '4', ltr: true },
+      { key: 'card_mobile_w',      label: 'عرض بطاقة مشاركات الزبائن - موبايل (px)', placeholder: '140', ltr: true },
+      { key: 'card_mobile_h',      label: 'ارتفاع بطاقة مشاركات الزبائن - موبايل (px)', placeholder: '220', ltr: true },
+      { key: 'card_desktop_w',     label: 'عرض بطاقة مشاركات الزبائن - حاسوب (px)', placeholder: '180', ltr: true },
+      { key: 'card_desktop_h',     label: 'ارتفاع بطاقة مشاركات الزبائن - حاسوب (px)', placeholder: '280', ltr: true },
+      { key: 'hero_min_height_mobile',  label: 'الحد الأدنى لارتفاع الهيرو - موبايل (px)', placeholder: '320', ltr: true },
+      { key: 'hero_min_height_desktop', label: 'الحد الأدنى لارتفاع الهيرو - حاسوب (px)', placeholder: '500', ltr: true },
+    ],
+  },
+  {
     id: 'why_us',
     label: 'لماذا نختار سحاب',
     desc: 'تعديل عنوان وبطاقات قسم "لماذا نختار"',

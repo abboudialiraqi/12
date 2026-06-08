@@ -52,7 +52,7 @@ function AppContent() {
     const prev = stack[stack.length - 1];
     if (prev.category !== undefined) setSelectedCategory(prev.category ?? null);
     if (prev.productId) setSelectedProductId(prev.productId);
-    setCurrentPage(prev.page);
+    setCurrentPage(prev.page as Page);
     const savedY = prev.scrollY ?? 0;
     setTimeout(() => window.scrollTo({ top: savedY, behavior: 'instant' as ScrollBehavior }), 50);
   }, []);
@@ -77,7 +77,7 @@ function AppContent() {
 
   const handleViewDetail = useCallback((product: Product) => {
     historyStack.current.push({
-      page: currentPage === 'products' ? 'products' : 'home',
+      page: currentPage,
       category: selectedCategory,
       scrollY: window.scrollY,
     });

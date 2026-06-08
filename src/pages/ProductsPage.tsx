@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Grid3x3 as Grid3X3, List, ChevronDown, Zap, X } from 'lucide-react';
 import { supabase, type Product, type Category } from '../lib/supabase';
+import { useSettings } from '../hooks/useSettings';
 import ProductCard from '../components/ProductCard';
 
 type ProductsPageProps = {
@@ -18,6 +19,7 @@ export default function ProductsPage({ selectedCategory, onCategorySelect, searc
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('newest');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const { get } = useSettings();
 
   useEffect(() => {
     async function fetchCategories() {
@@ -167,7 +169,13 @@ export default function ProductsPage({ selectedCategory, onCategorySelect, searc
           <p className="text-gray-500 text-sm">جرب البحث بكلمات مختلفة أو تصفح قسم آخر</p>
         </div>
       ) : (
-        <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4' : 'grid-cols-1'}`}>
+        <div className={`grid gap-4 ${viewMode === 'grid' ? (() => {
+          const mobile = get('grid_mobile_cols', '2');
+          const desktop = get('grid_desktop_cols', '4');
+          const mobileClass = mobile === '1' ? 'grid-cols-1' : 'grid-cols-2';
+          const desktopClass = desktop === '3' ? 'lg:grid-cols-3' : desktop === '5' ? 'lg:grid-cols-5' : 'lg:grid-cols-4';
+          return `${mobileClass} sm:grid-cols-3 ${desktopClass}`;
+        })() : 'grid-cols-1'}`}>
           {products.map(product => (
             <ProductCard key={product.id} product={product} onViewDetail={onViewDetail} />
           ))}

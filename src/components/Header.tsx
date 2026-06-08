@@ -88,9 +88,9 @@ export default function Header({ currentPage, onNavigate, onSearch, selectedCate
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
         {/* ── Animated Ticker Bar ── */}
         <div className="bg-emerald-600 text-white overflow-hidden py-1.5 select-none">
-          <div className="flex animate-ticker whitespace-nowrap">
+          <div className="animate-ticker whitespace-nowrap" style={{ display: 'inline-flex', minWidth: '200%' }}>
             {[...tickerItems, ...tickerItems].map((item, i) => (
-              <span key={i} className="inline-flex items-center gap-1.5 mx-6 text-xs font-medium">
+              <span key={i} className="inline-flex items-center gap-1.5 mx-6 text-xs font-medium shrink-0">
                 <span>{item.icon}</span>
                 <span>{item.text}</span>
                 <span className="mx-3 opacity-40">|</span>
