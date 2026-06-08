@@ -102,6 +102,7 @@ const SETTING_SECTIONS: SettingSection[] = [
     color: 'text-blue-600 bg-blue-50',
     fields: [
       { key: 'store_name', label: 'اسم المتجر', placeholder: 'سحاب' },
+      { key: 'store_logo_url', label: 'رابط صورة شعار الموقع (URL)', placeholder: 'https://...', ltr: true },
       { key: 'store_tagline', label: 'الشعار التجاري', placeholder: 'للأدوات المدرسية والمكتبية' },
       { key: 'top_bar_text', label: 'نص الشريط الإعلاني (أعلى الصفحة)', placeholder: 'توصيل مجاني للطلبات فوق 100,000 د.ع' },
     ],
@@ -242,6 +243,19 @@ const SETTING_SECTIONS: SettingSection[] = [
       { key: 'why_us_3_desc',  label: 'البطاقة الثالثة — الوصف',  placeholder: 'واتساب في أي وقت' },
       { key: 'why_us_4_title', label: 'البطاقة الرابعة — العنوان', placeholder: 'منتجات أصلية مضمونة' },
       { key: 'why_us_4_desc',  label: 'البطاقة الرابعة — الوصف',  placeholder: 'جودة عالية بأسعار منافسة' },
+    ],
+  },
+  {
+    id: 'reviews',
+    label: 'آراء الزبائن',
+    desc: 'رابط هايلايت إنستغرام لآراء الزبائن',
+    icon: Star,
+    color: 'text-pink-600 bg-pink-50',
+    fields: [
+      { key: 'reviews_title',          label: 'عنوان قسم الآراء',                 placeholder: 'ماذا يقول زبائننا؟' },
+      { key: 'reviews_subtitle',       label: 'وصف قسم الآراء',                   placeholder: 'آراء حقيقية من زبائن سعداء' },
+      { key: 'reviews_instagram_url',  label: 'رابط هايلايت الآراء (إنستغرام)',   placeholder: 'https://www.instagram.com/stories/highlights/...', ltr: true },
+      { key: 'reviews_instagram_user', label: 'اسم حساب الإنستغرام (للعرض)',      placeholder: '@suhab.iq' },
     ],
   },
   {

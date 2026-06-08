@@ -36,7 +36,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   return (
     <SettingsContext.Provider value={{ settings, loading, get, refresh: fetchSettings }}>
-      {children}
+      {loading ? (
+        <div className="min-h-screen flex items-center justify-center bg-white" dir="rtl">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-10 h-10 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin" style={{ borderWidth: 3 }} />
+            <span className="text-sm text-gray-400">جاري التحميل...</span>
+          </div>
+        </div>
+      ) : children}
     </SettingsContext.Provider>
   );
 }

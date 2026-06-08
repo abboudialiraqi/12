@@ -1,8 +1,8 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
-  ShoppingCart, Minus, Plus, Star, Truck, Shield, RotateCcw,
-  Share2, Check, ChevronRight, Package, Heart, ZoomIn,
-  Sparkles, Award, Clock, ArrowLeft
+  ShoppingCart, Minus, Plus, Truck, Shield,
+  Check, ChevronRight, Package, Heart, ZoomIn,
+  Sparkles, Clock, ArrowLeft, Copy
 } from 'lucide-react';
 import { supabase, type Product } from '../lib/supabase';
 import { useCart } from '../hooks/useCart';
@@ -190,14 +190,10 @@ export default function ProductDetailPage({ productId, onBack, onViewDetail }: P
     setTimeout(() => setAddedToCart(false), 2500);
   };
 
-  const handleShare = async () => {
-    if (navigator.share && product) {
-      try { await navigator.share({ title: product.name, url: window.location.href }); } catch { /* dismissed */ }
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      setShared(true);
-      setTimeout(() => setShared(false), 2000);
-    }
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href).catch(() => {});
+    setShared(true);
+    setTimeout(() => setShared(false), 2000);
   };
 
   if (loading) return <Skeleton />;
@@ -309,9 +305,6 @@ export default function ProductDetailPage({ productId, onBack, onViewDetail }: P
               >
                 <Heart className={`w-4 h-4 ${wishlisted ? 'fill-current' : ''}`} />
               </FloatBtn>
-              <FloatBtn onClick={handleShare} title={shared ? 'تم النسخ!' : 'مشاركة'} active={shared} activeClass="bg-emerald-500 text-white shadow-emerald-400/40">
-                {shared ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
-              </FloatBtn>
             </div>
           </div>
 
@@ -346,22 +339,6 @@ export default function ProductDetailPage({ productId, onBack, onViewDetail }: P
               </span>
             )}
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-snug">{product.name}</h1>
-          </div>
-
-          {/* Rating */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-0.5">
-              {[1,2,3,4,5].map(i => (
-                <Star key={i} className={`w-4 h-4 ${i <= 4 ? 'text-amber-400 fill-amber-400' : 'text-gray-200 fill-gray-200'}`} />
-              ))}
-            </div>
-            <span className="text-sm font-bold text-gray-800">4.0</span>
-            <span className="text-sm text-gray-400">|</span>
-            <span className="text-sm text-gray-400">٣٢ تقييم</span>
-            <span className="text-sm text-gray-400">|</span>
-            <span className="flex items-center gap-1 text-sm text-emerald-600 font-medium">
-              <Award className="w-3.5 h-3.5" /> منتج مضمون
-            </span>
           </div>
 
           {/* Price */}
@@ -597,21 +574,34 @@ export default function ProductDetailPage({ productId, onBack, onViewDetail }: P
             </div>
           )}
 
-          {/* Trust badges */}
-          <div className="grid grid-cols-3 gap-2.5 pt-2 border-t border-gray-100">
-            {[
-              { icon: Truck,     text: 'توصيل سريع',  sub: '24-48 ساعة',  color: 'text-emerald-600', bg: 'bg-emerald-50' },
-              { icon: Shield,    text: 'ضمان الجودة', sub: 'أصلي 100%',   color: 'text-blue-600',    bg: 'bg-blue-50' },
-              { icon: RotateCcw, text: 'إرجاع سهل',   sub: 'خلال 7 أيام', color: 'text-amber-600',   bg: 'bg-amber-50' },
-            ].map(({ icon: Icon, text, sub, color, bg }, i) => (
-              <div key={i} className="text-center p-3.5 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors group cursor-default">
-                <div className={`w-9 h-9 ${bg} rounded-xl flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform`}>
-                  <Icon className={`w-4 h-4 ${color}`} />
+          {/* Trust badges + Share */}
+          <div className="space-y-2.5 pt-2 border-t border-gray-100">
+            <div className="grid grid-cols-3 gap-2.5">
+              {[
+                { icon: Truck,  text: 'توصيل سريع',         sub: '24-48 ساعة',         color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                { icon: Shield, text: 'ضمان الجودة',         sub: 'أصلي 100%',          color: 'text-blue-600',    bg: 'bg-blue-50' },
+                { icon: Truck,  text: 'ترجيع مع المندوب',   sub: 'بوجود المندوب',      color: 'text-amber-600',   bg: 'bg-amber-50' },
+              ].map(({ icon: Icon, text, sub, color, bg }, i) => (
+                <div key={i} className="text-center p-3.5 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors group cursor-default">
+                  <div className={`w-9 h-9 ${bg} rounded-xl flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform`}>
+                    <Icon className={`w-4 h-4 ${color}`} />
+                  </div>
+                  <p className="text-xs font-bold text-gray-800 leading-tight">{text}</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">{sub}</p>
                 </div>
-                <p className="text-xs font-bold text-gray-800 leading-tight">{text}</p>
-                <p className="text-[10px] text-gray-400 mt-0.5">{sub}</p>
-              </div>
-            ))}
+              ))}
+            </div>
+            {/* Share / Copy link button */}
+            <button
+              onClick={handleShare}
+              className={`w-full h-10 rounded-xl font-medium text-sm flex items-center justify-center gap-2 border-2 transition-all duration-200 active:scale-[0.98] ${
+                shared
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-600'
+                  : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-600'
+              }`}
+            >
+              {shared ? <><Check className="w-4 h-4" /> تم نسخ الرابط!</> : <><Copy className="w-4 h-4" /> نسخ رابط المنتج</>}
+            </button>
           </div>
 
           {product.sku && (

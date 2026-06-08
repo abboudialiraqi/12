@@ -114,7 +114,7 @@ export default function Header({ currentPage, onNavigate, onSearch, selectedCate
                 className="flex items-center group"
               >
                 <img
-                  src="/0F1E3BB9-5C5B-49D4-BDB7-918B8DE3DD64.PNG"
+                  src={get('store_logo_url', '') || '/0F1E3BB9-5C5B-49D4-BDB7-918B8DE3DD64.PNG'}
                   alt={get('store_name', 'سحاب')}
                   className="h-12 w-12 object-contain group-hover:scale-105 transition-transform duration-200"
                 />

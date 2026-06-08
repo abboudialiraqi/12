@@ -164,8 +164,8 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
     <div className="overflow-x-hidden">
 
       {/* ── Hero Slider ── */}
-      <section className="relative text-white overflow-hidden" style={{ minHeight: '480px' }}>
-        <div className="absolute inset-0 transition-all duration-700">
+      <section className="relative text-white overflow-hidden" style={{ minHeight: '360px' }}>
+        <div className="absolute inset-0">
           {banner.img && (
             <img src={banner.img} alt="" className="w-full h-full object-cover" />
           )}
@@ -173,13 +173,13 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
           <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 sm:py-28 relative">
-          <div className="max-w-2xl space-y-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-24 relative">
+          <div className="max-w-2xl space-y-4 sm:space-y-6">
             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium border border-white/30 animate-pulse">
               <Sparkles className="w-4 h-4" />
               {banner.badge}
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight drop-shadow-lg">
+            <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold leading-tight drop-shadow-lg">
               {banner.title}
               <br />
               <span className="text-yellow-300">{banner.highlight}</span>
@@ -535,6 +535,50 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
           </div>
         </div>
       </section>
+
+      {/* ── Instagram Customer Reviews ── */}
+      {get('reviews_instagram_url', '') && (
+        <section className="bg-white py-14">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
+                  <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+                  </svg>
+                </div>
+                <span className="text-sm font-semibold text-pink-600">{get('reviews_instagram_user', 'إنستغرام')}</span>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">{get('reviews_title', 'ماذا يقول زبائننا؟')}</h2>
+              <p className="text-gray-500 text-sm">{get('reviews_subtitle', 'آراء حقيقية من زبائن سعداء')}</p>
+            </div>
+            <div className="flex justify-center">
+              <a
+                href={get('reviews_instagram_url', '')}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative flex flex-col items-center gap-4 bg-gradient-to-br from-pink-50 to-rose-50 border-2 border-pink-100 hover:border-pink-300 rounded-3xl p-8 transition-all duration-300 hover:shadow-xl hover:shadow-pink-100 max-w-xs w-full hover:-translate-y-1"
+              >
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-pink-500 via-rose-500 to-orange-400 flex items-center justify-center shadow-lg shadow-pink-200 group-hover:scale-110 transition-transform duration-300">
+                  <svg className="w-10 h-10 text-white" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+                  </svg>
+                </div>
+                <div className="text-center">
+                  <p className="font-bold text-gray-900 text-base mb-1">شاهد آراء زبائننا</p>
+                  <p className="text-sm text-gray-500">هايلايت الآراء على إنستغرام</p>
+                </div>
+                <div className="flex items-center gap-1.5 text-sm font-semibold text-pink-600 bg-pink-100 px-4 py-2 rounded-xl group-hover:bg-pink-200 transition-colors">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+                  </svg>
+                  فتح في إنستغرام
+                </div>
+              </a>
+            </div>
+          </div>
+        </section>
+      )}
 
     </div>
   );
