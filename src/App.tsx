@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { CartProvider } from './hooks/useCart';
 import { AuthProvider } from './hooks/useAuth';
 import { SettingsProvider } from './hooks/useSettings';
@@ -18,77 +18,85 @@ import type { Product } from './lib/supabase';
 
 type Page = 'home' | 'products' | 'cart' | 'checkout' | 'product-detail' | 'admin' | 'login' | 'account';
 
-type PageState = {
+type BackSnapshot = {
   page: Page;
-  category?: string | null;
-  productId?: string;
-  searchQuery?: string;
-  saleOnly?: boolean;
-  scrollY?: number;
+  category: string | null;
+  saleOnly: boolean;
+  searchQuery: string;
+  scrollY: number;
 };
 
 function AppContent() {
-  const [navStack, setNavStack] = useState<PageState[]>([{ page: 'home' }]);
-  const currentState = navStack[navStack.length - 1];
-  const currentPage = currentState.page;
-  const selectedCategory = currentState.category ?? null;
-  const selectedProductId = currentState.productId ?? '';
-  const searchQuery = currentState.searchQuery ?? '';
-  const saleOnly = currentState.saleOnly ?? false;
+  const [currentPage, setCurrentPage] = useState<Page>('home');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedProductId, setSelectedProductId] = useState('');
+  const [saleOnly, setSaleOnly] = useState(false);
+
+  // Refs always hold the latest values so handleViewDetail never has a stale closure
+  const pageRef = useRef(currentPage);
+  const categoryRef = useRef(selectedCategory);
+  const saleOnlyRef = useRef(saleOnly);
+  const searchQueryRef = useRef(searchQuery);
+  useEffect(() => { pageRef.current = currentPage; }, [currentPage]);
+  useEffect(() => { categoryRef.current = selectedCategory; }, [selectedCategory]);
+  useEffect(() => { saleOnlyRef.current = saleOnly; }, [saleOnly]);
+  useEffect(() => { searchQueryRef.current = searchQuery; }, [searchQuery]);
+
+  // One level of back history — only needed when entering product detail
+  const backSnap = useRef<BackSnapshot | null>(null);
 
   const handleNavigate = useCallback((page: Page, data?: Record<string, string>) => {
-    const scrollY = window.scrollY;
-    setNavStack(stack => {
-      const top = stack[stack.length - 1];
-      const saved = { ...top, scrollY };
-      const next: PageState = { page };
-      if (page === 'product-detail' && data?.productId) next.productId = data.productId;
-      return [...stack.slice(0, -1), saved, next];
-    });
+    if (page === 'product-detail' && data?.productId) {
+      setSelectedProductId(data.productId);
+    }
+    setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   const handleBack = useCallback(() => {
-    setNavStack(stack => {
-      if (stack.length <= 1) return [{ page: 'home' }];
-      const prev = stack[stack.length - 2];
-      const newStack = stack.slice(0, -1);
-      const savedY = prev.scrollY ?? 0;
+    const snap = backSnap.current;
+    backSnap.current = null;
+    if (snap) {
+      setSelectedCategory(snap.category);
+      setSaleOnly(snap.saleOnly);
+      setSearchQuery(snap.searchQuery);
+      setCurrentPage(snap.page);
+      const savedY = snap.scrollY;
       setTimeout(() => window.scrollTo({ top: savedY, behavior: 'instant' as ScrollBehavior }), 50);
-      return newStack;
-    });
+    } else {
+      setCurrentPage('home');
+    }
   }, []);
 
   const handleCategorySelect = useCallback((slug: string | null) => {
-    setNavStack(stack => {
-      const top = stack[stack.length - 1];
-      return [...stack.slice(0, -1), { ...top, category: slug, saleOnly: false }];
-    });
+    setSelectedCategory(slug);
+    setSaleOnly(false);
   }, []);
 
   const handleSaleNavigate = useCallback(() => {
-    setNavStack(stack => {
-      const scrollY = window.scrollY;
-      const top = stack[stack.length - 1];
-      return [...stack.slice(0, -1), { ...top, scrollY }, { page: 'products', saleOnly: true, category: null, searchQuery: '' }];
-    });
+    setSaleOnly(true);
+    setSelectedCategory(null);
+    setSearchQuery('');
+    setCurrentPage('products');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   const handleSearch = useCallback((query: string) => {
-    setNavStack(stack => {
-      const top = stack[stack.length - 1];
-      return [...stack.slice(0, -1), { ...top, searchQuery: query }];
-    });
+    setSearchQuery(query);
   }, []);
 
+  // Stable identity ([] deps) — reads state via refs so it's never stale
   const handleViewDetail = useCallback((product: Product) => {
-    setNavStack(stack => {
-      const scrollY = window.scrollY;
-      const top = stack[stack.length - 1];
-      const saved = { ...top, scrollY };
-      return [...stack.slice(0, -1), saved, { page: 'product-detail', productId: product.id }];
-    });
+    backSnap.current = {
+      page: pageRef.current,
+      category: categoryRef.current,
+      saleOnly: saleOnlyRef.current,
+      searchQuery: searchQueryRef.current,
+      scrollY: window.scrollY,
+    };
+    setSelectedProductId(product.id);
+    setCurrentPage('product-detail');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
@@ -111,10 +119,7 @@ function AppContent() {
             searchQuery={searchQuery}
             onViewDetail={handleViewDetail}
             saleOnly={saleOnly}
-            onClearSale={() => setNavStack(stack => {
-              const top = stack[stack.length - 1];
-              return [...stack.slice(0, -1), { ...top, saleOnly: false }];
-            })}
+            onClearSale={() => setSaleOnly(false)}
           />
         );
       case 'product-detail':
