@@ -10,6 +10,7 @@ import ProductCard from '../components/ProductCard';
 
 type ProductDetailPageProps = {
   productId: string;
+  backLabel?: string;
   onBack: () => void;
   onViewDetail: (product: Product) => void;
 };
@@ -125,7 +126,7 @@ function ZoomModal({ src, onClose }: { src: string; onClose: () => void }) {
   );
 }
 
-export default function ProductDetailPage({ productId, onBack, onViewDetail }: ProductDetailPageProps) {
+export default function ProductDetailPage({ productId, backLabel = 'رجوع', onBack, onViewDetail }: ProductDetailPageProps) {
   const [product, setProduct]             = useState<Product | null>(null);
   const [relatedProducts, setRelated]     = useState<Product[]>([]);
   const [quantity, setQuantity]           = useState(1);
@@ -223,22 +224,27 @@ export default function ProductDetailPage({ productId, onBack, onViewDetail }: P
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-28">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-28">
       {zoomedImg && <ZoomModal src={zoomedImg} onClose={() => setZoomedImg(null)} />}
 
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-sm text-gray-400 mb-8">
+      {/* Back button — prominent on all screen sizes */}
+      <div className="mb-6">
         <button
           onClick={onBack}
-          className="flex items-center gap-1 hover:text-emerald-600 transition-colors font-medium"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 hover:bg-emerald-50 hover:text-emerald-700 text-gray-700 font-medium text-sm transition-colors"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          المنتجات
+          <ArrowLeft className="w-4 h-4" />
+          {backLabel}
         </button>
+      </div>
+
+      {/* Breadcrumb (secondary, desktop only) */}
+      <nav className="hidden sm:flex items-center gap-1.5 text-sm text-gray-400 mb-6">
+        <span className="hover:text-emerald-600 cursor-pointer transition-colors" onClick={onBack}>{backLabel}</span>
         <ChevronRight className="w-3 h-3" />
         {product.categories && (
           <>
-            <span className="hover:text-emerald-600 cursor-pointer transition-colors">{product.categories.name}</span>
+            <span className="text-gray-500">{product.categories.name}</span>
             <ChevronRight className="w-3 h-3" />
           </>
         )}

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { CartProvider } from './hooks/useCart';
 import { AuthProvider } from './hooks/useAuth';
 import { SettingsProvider } from './hooks/useSettings';
@@ -20,6 +20,7 @@ type Page = 'home' | 'products' | 'cart' | 'checkout' | 'product-detail' | 'admi
 
 type BackSnapshot = {
   page: Page;
+  label: string;
   category: string | null;
   saleOnly: boolean;
   searchQuery: string;
@@ -32,19 +33,7 @@ function AppContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProductId, setSelectedProductId] = useState('');
   const [saleOnly, setSaleOnly] = useState(false);
-
-  // Refs always hold the latest values so handleViewDetail never has a stale closure
-  const pageRef = useRef(currentPage);
-  const categoryRef = useRef(selectedCategory);
-  const saleOnlyRef = useRef(saleOnly);
-  const searchQueryRef = useRef(searchQuery);
-  useEffect(() => { pageRef.current = currentPage; }, [currentPage]);
-  useEffect(() => { categoryRef.current = selectedCategory; }, [selectedCategory]);
-  useEffect(() => { saleOnlyRef.current = saleOnly; }, [saleOnly]);
-  useEffect(() => { searchQueryRef.current = searchQuery; }, [searchQuery]);
-
-  // One level of back history — only needed when entering product detail
-  const backSnap = useRef<BackSnapshot | null>(null);
+  const [backSnap, setBackSnap] = useState<BackSnapshot | null>(null);
 
   const handleNavigate = useCallback((page: Page, data?: Record<string, string>) => {
     if (page === 'product-detail' && data?.productId) {
@@ -55,18 +44,19 @@ function AppContent() {
   }, []);
 
   const handleBack = useCallback(() => {
-    const snap = backSnap.current;
-    backSnap.current = null;
-    if (snap) {
-      setSelectedCategory(snap.category);
-      setSaleOnly(snap.saleOnly);
-      setSearchQuery(snap.searchQuery);
-      setCurrentPage(snap.page);
-      const savedY = snap.scrollY;
-      setTimeout(() => window.scrollTo({ top: savedY, behavior: 'instant' as ScrollBehavior }), 50);
-    } else {
-      setCurrentPage('home');
-    }
+    setBackSnap(snap => {
+      if (snap) {
+        setSelectedCategory(snap.category);
+        setSaleOnly(snap.saleOnly);
+        setSearchQuery(snap.searchQuery);
+        setCurrentPage(snap.page);
+        const savedY = snap.scrollY;
+        setTimeout(() => window.scrollTo({ top: savedY, behavior: 'instant' as ScrollBehavior }), 50);
+      } else {
+        setCurrentPage('home');
+      }
+      return null;
+    });
   }, []);
 
   const handleCategorySelect = useCallback((slug: string | null) => {
@@ -86,19 +76,30 @@ function AppContent() {
     setSearchQuery(query);
   }, []);
 
-  // Stable identity ([] deps) — reads state via refs so it's never stale
-  const handleViewDetail = useCallback((product: Product) => {
-    backSnap.current = {
-      page: pageRef.current,
-      category: categoryRef.current,
-      saleOnly: saleOnlyRef.current,
-      searchQuery: searchQueryRef.current,
-      scrollY: window.scrollY,
+  // Not memoized — reads state directly so it's always fresh, no stale closures possible
+  const handleViewDetail = (product: Product) => {
+    const pageLabels: Partial<Record<Page, string>> = {
+      home: 'الرئيسية',
+      products: 'المنتجات',
+      account: 'حسابي',
     };
+    setBackSnap({
+      page: currentPage,
+      label: pageLabels[currentPage] ?? 'رجوع',
+      category: selectedCategory,
+      saleOnly,
+      searchQuery,
+      scrollY: window.scrollY,
+    });
     setSelectedProductId(product.id);
     setCurrentPage('product-detail');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+  };
+
+  // Stable ref wrapper so child components don't re-render on every keystroke etc.
+  const handleViewDetailRef = useRef(handleViewDetail);
+  handleViewDetailRef.current = handleViewDetail;
+  const stableViewDetail = useCallback((product: Product) => handleViewDetailRef.current(product), []);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -107,7 +108,7 @@ function AppContent() {
           <HomePage
             onNavigate={handleNavigate as any}
             onCategorySelect={handleCategorySelect}
-            onViewDetail={handleViewDetail}
+            onViewDetail={stableViewDetail}
             onSaleNavigate={handleSaleNavigate}
           />
         );
@@ -117,7 +118,7 @@ function AppContent() {
             selectedCategory={selectedCategory}
             onCategorySelect={handleCategorySelect}
             searchQuery={searchQuery}
-            onViewDetail={handleViewDetail}
+            onViewDetail={stableViewDetail}
             saleOnly={saleOnly}
             onClearSale={() => setSaleOnly(false)}
           />
@@ -126,8 +127,9 @@ function AppContent() {
         return (
           <ProductDetailPage
             productId={selectedProductId}
+            backLabel={backSnap?.label ?? 'رجوع'}
             onBack={handleBack}
-            onViewDetail={handleViewDetail}
+            onViewDetail={stableViewDetail}
           />
         );
       case 'cart':
@@ -139,7 +141,7 @@ function AppContent() {
       case 'admin':
         return <AdminPage onNavigate={handleNavigate as any} />;
       case 'account':
-        return <CustomerAccountPage onNavigate={handleNavigate as any} onViewDetail={handleViewDetail} />;
+        return <CustomerAccountPage onNavigate={handleNavigate as any} onViewDetail={stableViewDetail} />;
       default:
         return null;
     }
