@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { CartProvider } from './hooks/useCart';
 import { AuthProvider } from './hooks/useAuth';
 import { SettingsProvider } from './hooks/useSettings';
@@ -22,69 +22,75 @@ type PageState = {
   page: Page;
   category?: string | null;
   productId?: string;
+  searchQuery?: string;
+  saleOnly?: boolean;
   scrollY?: number;
 };
 
 function AppContent() {
-  const [currentPage, setCurrentPage] = useState<Page>('home');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedProductId, setSelectedProductId] = useState('');
-  const [saleOnly, setSaleOnly] = useState(false);
-  const historyStack = useRef<PageState[]>([{ page: 'home' }]);
+  const [navStack, setNavStack] = useState<PageState[]>([{ page: 'home' }]);
+  const currentState = navStack[navStack.length - 1];
+  const currentPage = currentState.page;
+  const selectedCategory = currentState.category ?? null;
+  const selectedProductId = currentState.productId ?? '';
+  const searchQuery = currentState.searchQuery ?? '';
+  const saleOnly = currentState.saleOnly ?? false;
 
   const handleNavigate = useCallback((page: Page, data?: Record<string, string>) => {
-    if (page === 'product-detail' && data?.productId) {
-      setSelectedProductId(data.productId);
-    }
-    historyStack.current.push({ page, scrollY: window.scrollY });
-    setCurrentPage(page);
+    const scrollY = window.scrollY;
+    setNavStack(stack => {
+      const top = stack[stack.length - 1];
+      const saved = { ...top, scrollY };
+      const next: PageState = { page };
+      if (page === 'product-detail' && data?.productId) next.productId = data.productId;
+      return [...stack.slice(0, -1), saved, next];
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   const handleBack = useCallback(() => {
-    const stack = historyStack.current;
-    if (stack.length <= 1) {
-      setCurrentPage('home');
-      return;
-    }
-    stack.pop();
-    const prev = stack[stack.length - 1];
-    if (prev.category !== undefined) setSelectedCategory(prev.category ?? null);
-    if (prev.productId) setSelectedProductId(prev.productId);
-    setCurrentPage(prev.page as Page);
-    const savedY = prev.scrollY ?? 0;
-    setTimeout(() => window.scrollTo({ top: savedY, behavior: 'instant' as ScrollBehavior }), 50);
+    setNavStack(stack => {
+      if (stack.length <= 1) return [{ page: 'home' }];
+      const prev = stack[stack.length - 2];
+      const newStack = stack.slice(0, -1);
+      const savedY = prev.scrollY ?? 0;
+      setTimeout(() => window.scrollTo({ top: savedY, behavior: 'instant' as ScrollBehavior }), 50);
+      return newStack;
+    });
   }, []);
 
   const handleCategorySelect = useCallback((slug: string | null) => {
-    setSelectedCategory(slug);
-    setSaleOnly(false);
+    setNavStack(stack => {
+      const top = stack[stack.length - 1];
+      return [...stack.slice(0, -1), { ...top, category: slug, saleOnly: false }];
+    });
   }, []);
 
   const handleSaleNavigate = useCallback(() => {
-    setSaleOnly(true);
-    setSelectedCategory(null);
-    setSearchQuery('');
-    historyStack.current.push({ page: 'products', scrollY: 0 });
-    setCurrentPage('products');
+    setNavStack(stack => {
+      const scrollY = window.scrollY;
+      const top = stack[stack.length - 1];
+      return [...stack.slice(0, -1), { ...top, scrollY }, { page: 'products', saleOnly: true, category: null, searchQuery: '' }];
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   const handleSearch = useCallback((query: string) => {
-    setSearchQuery(query);
+    setNavStack(stack => {
+      const top = stack[stack.length - 1];
+      return [...stack.slice(0, -1), { ...top, searchQuery: query }];
+    });
   }, []);
 
   const handleViewDetail = useCallback((product: Product) => {
-    historyStack.current.push({
-      page: currentPage,
-      category: selectedCategory,
-      scrollY: window.scrollY,
+    setNavStack(stack => {
+      const scrollY = window.scrollY;
+      const top = stack[stack.length - 1];
+      const saved = { ...top, scrollY };
+      return [...stack.slice(0, -1), saved, { page: 'product-detail', productId: product.id }];
     });
-    setSelectedProductId(product.id);
-    setCurrentPage('product-detail');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [currentPage, selectedCategory]);
+  }, []);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -105,7 +111,10 @@ function AppContent() {
             searchQuery={searchQuery}
             onViewDetail={handleViewDetail}
             saleOnly={saleOnly}
-            onClearSale={() => setSaleOnly(false)}
+            onClearSale={() => setNavStack(stack => {
+              const top = stack[stack.length - 1];
+              return [...stack.slice(0, -1), { ...top, saleOnly: false }];
+            })}
           />
         );
       case 'product-detail':
