@@ -253,23 +253,23 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
               <Sparkles className="w-4 h-4" />
               {banner.badge}
             </div>
-            <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold leading-tight drop-shadow-lg">
+            <h1 className="site-hero-title text-2xl sm:text-4xl lg:text-6xl font-bold leading-tight drop-shadow-lg">
               {banner.title}
               <br />
               <span className="text-yellow-300">{banner.highlight}</span>
             </h1>
-            <p className="text-lg text-white/85 max-w-lg leading-relaxed drop-shadow">{banner.desc}</p>
+            <p className="site-hero-desc text-lg text-white/85 max-w-lg leading-relaxed drop-shadow">{banner.desc}</p>
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => onNavigate('products')}
-                className="px-8 py-3.5 bg-white text-gray-900 rounded-xl font-bold hover:bg-gray-100 active:scale-[0.98] transition-all shadow-xl flex items-center gap-2"
+                className="site-btn-text px-8 py-3.5 bg-white text-gray-900 rounded-xl font-bold hover:bg-gray-100 active:scale-[0.98] transition-all shadow-xl flex items-center gap-2"
               >
                 {get('hero_cta_primary', 'تسوق الآن')}
                 <ArrowLeft className="w-4 h-4" />
               </button>
               <button
                 onClick={onSaleNavigate}
-                className="px-8 py-3.5 bg-white/10 backdrop-blur-sm text-white rounded-xl font-medium hover:bg-white/20 active:scale-[0.98] transition-all border border-white/30"
+                className="site-btn-text px-8 py-3.5 bg-white/10 backdrop-blur-sm text-white rounded-xl font-medium hover:bg-white/20 active:scale-[0.98] transition-all border border-white/30"
               >
                 {get('hero_cta_secondary', 'تصفح العروض')}
               </button>
@@ -353,7 +353,7 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
                         )}
                       </div>
                       <span
-                        className={`text-xs font-medium transition-colors text-center max-w-[72px] leading-tight ${
+                        className={`site-category-label text-xs font-medium transition-colors text-center max-w-[72px] leading-tight ${
                           isActive ? '' : 'text-gray-700'
                         }`}
                         style={isActive && (cat as any).color ? { color: (cat as any).color } : undefined}
@@ -467,9 +467,9 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
-                <h2 className="text-2xl font-bold text-gray-900">{get('featured_title', 'منتجات مميزة')}</h2>
+                <h2 className="site-section-heading text-2xl font-bold text-gray-900">{get('featured_title', 'منتجات مميزة')}</h2>
               </div>
-              <p className="text-gray-500 text-sm">{get('featured_subtitle', 'أفضل المنتجات المختارة لكم')}</p>
+              <p className="site-section-desc text-gray-500 text-sm">{get('featured_subtitle', 'أفضل المنتجات المختارة لكم')}</p>
             </div>
             <button
               onClick={() => onNavigate('products')}
@@ -543,9 +543,9 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Zap className="w-5 h-5 text-red-500 fill-red-500" />
-                <h2 className="text-2xl font-bold text-gray-900">{get('sale_title', 'عروض وتخفيضات')}</h2>
+                <h2 className="site-section-heading text-2xl font-bold text-gray-900">{get('sale_title', 'عروض وتخفيضات')}</h2>
               </div>
-              <p className="text-gray-500 text-sm">{get('sale_subtitle', 'منتجات بأسعار مخفضة لفترة محدودة')}</p>
+              <p className="site-section-desc text-gray-500 text-sm">{get('sale_subtitle', 'منتجات بأسعار مخفضة لفترة محدودة')}</p>
             </div>
             <button
               onClick={() => onNavigate('products')}
@@ -630,8 +630,8 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
       <section className="bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
           <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold mb-2">{get('why_us_title', 'لماذا تختار سحاب؟')}</h2>
-            <p className="text-gray-400 text-sm">{get('why_us_subtitle', 'نقدم لك تجربة تسوق استثنائية')}</p>
+            <h2 className="site-section-heading text-2xl font-bold mb-2">{get('why_us_title', 'لماذا تختار سحاب؟')}</h2>
+            <p className="site-section-desc text-gray-400 text-sm">{get('why_us_subtitle', 'نقدم لك تجربة تسوق استثنائية')}</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {whyUsItems.map((item, i) => (

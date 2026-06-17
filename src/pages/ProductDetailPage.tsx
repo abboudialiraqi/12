@@ -338,13 +338,13 @@ export default function ProductDetailPage({ productId, backLabel = 'رجوع', o
                 {product.categories.name}
               </span>
             )}
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-snug">{product.name}</h1>
+            <h1 className="site-product-detail-title text-2xl sm:text-3xl font-bold text-gray-900 leading-snug">{product.name}</h1>
           </div>
 
           {/* Price */}
           <div className="bg-gray-50 rounded-2xl px-5 py-4 border border-gray-100">
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-gray-900 text-price-custom tabular-nums">
+              <span className="site-product-detail-price text-4xl font-bold text-gray-900 text-price-custom tabular-nums">
                 {(product.price * quantity).toLocaleString()}
               </span>
               <span className="text-lg text-gray-400 font-medium">د.ع</span>

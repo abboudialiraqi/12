@@ -140,7 +140,7 @@ export default function ProductCard({ product, onViewDetail }: ProductCardProps)
 
         <h3
           onClick={() => onViewDetail(product)}
-          className="font-semibold text-gray-900 text-sm leading-snug line-clamp-2 hover:text-emerald-600 transition-colors"
+          className="site-product-card-name font-semibold text-gray-900 text-sm leading-snug line-clamp-2 hover:text-emerald-600 transition-colors"
         >
           {product.name}
         </h3>
@@ -181,7 +181,7 @@ export default function ProductCard({ product, onViewDetail }: ProductCardProps)
         <div className="flex items-end justify-between pt-1 gap-2">
           <div>
             <div className="flex items-baseline gap-1">
-              <span className="text-base font-bold text-gray-900 text-price-custom tabular-nums">{product.price.toLocaleString()}</span>
+              <span className="site-product-card-price text-base font-bold text-gray-900 text-price-custom tabular-nums">{product.price.toLocaleString()}</span>
               <span className="text-xs text-gray-400">د.ع</span>
             </div>
             {hasDiscount && (

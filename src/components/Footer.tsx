@@ -49,7 +49,7 @@ export default function Footer() {
           {/* Description + Social */}
           {footerDesc && (
             <div className="space-y-4">
-              <p className="text-sm leading-relaxed text-gray-400">{footerDesc}</p>
+              <p className="site-footer-text text-sm leading-relaxed text-gray-400">{footerDesc}</p>
               {(socialLinks.length > 0 || whatsappHref) && (
                 <div className="flex items-center gap-2">
                   {socialLinks.map(({ href, Icon, label, hoverColor }) => (
@@ -73,7 +73,7 @@ export default function Footer() {
 
           {/* Contact */}
           <div>
-            <h3 className="text-white font-semibold mb-5 text-sm">تواصل معنا</h3>
+            <h3 className="site-footer-text text-white font-semibold mb-5 text-sm">تواصل معنا</h3>
             <ul className="space-y-3">
               <li className="flex items-center gap-3 group">
                 <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-emerald-600/20 transition-colors shrink-0">

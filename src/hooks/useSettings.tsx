@@ -155,6 +155,20 @@ function applyTheme(map: Settings) {
     ${cNavBg     ? `.site-header-bg { background-color: ${cNavBg} !important; }` : ''}
 
     ${cCardBg    ? `.bg-white { background-color: ${cCardBg} !important; }` : ''}
+
+    /* ── Font size overrides (only when set) ── */
+    ${map['fs_hero_title']          ? `.site-hero-title { font-size: ${map['fs_hero_title']}px !important; line-height: 1.15 !important; }` : ''}
+    ${map['fs_hero_desc']           ? `.site-hero-desc { font-size: ${map['fs_hero_desc']}px !important; }` : ''}
+    ${map['fs_section_heading']     ? `.site-section-heading { font-size: ${map['fs_section_heading']}px !important; }` : ''}
+    ${map['fs_section_desc']        ? `.site-section-desc { font-size: ${map['fs_section_desc']}px !important; }` : ''}
+    ${map['fs_product_card_name']   ? `.site-product-card-name { font-size: ${map['fs_product_card_name']}px !important; }` : ''}
+    ${map['fs_product_card_price']  ? `.site-product-card-price { font-size: ${map['fs_product_card_price']}px !important; }` : ''}
+    ${map['fs_product_detail_title'] ? `.site-product-detail-title { font-size: ${map['fs_product_detail_title']}px !important; }` : ''}
+    ${map['fs_product_detail_price'] ? `.site-product-detail-price { font-size: ${map['fs_product_detail_price']}px !important; }` : ''}
+    ${map['fs_nav_link']            ? `.site-nav-link { font-size: ${map['fs_nav_link']}px !important; }` : ''}
+    ${map['fs_footer_text']         ? `.site-footer-text { font-size: ${map['fs_footer_text']}px !important; }` : ''}
+    ${map['fs_category_label']      ? `.site-category-label { font-size: ${map['fs_category_label']}px !important; }` : ''}
+    ${map['fs_button']              ? `.site-btn-text { font-size: ${map['fs_button']}px !important; }` : ''}
   `;
 }
 

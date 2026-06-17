@@ -411,7 +411,7 @@ function NavItem({
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 group ${
+      className={`site-nav-link flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 group ${
         active
           ? 'text-emerald-600 bg-emerald-50'
           : highlight
