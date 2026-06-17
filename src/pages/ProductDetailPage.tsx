@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import {
   ShoppingCart, Minus, Plus, Truck, Shield,
   Check, ChevronRight, Package, Heart, ZoomIn,
-  Sparkles, Clock, ArrowLeft, Copy
+  Sparkles, Clock, ArrowLeft
 } from 'lucide-react';
 import { supabase, type Product } from '../lib/supabase';
 import { useCart } from '../hooks/useCart';
@@ -132,7 +132,7 @@ export default function ProductDetailPage({ productId, backLabel = 'رجوع', o
   const [quantity, setQuantity]           = useState(1);
   const [loading, setLoading]             = useState(true);
   const [addedToCart, setAddedToCart]     = useState(false);
-  const [shared, setShared]               = useState(false);
+
   const [wishlisted, setWishlisted]       = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
@@ -189,12 +189,6 @@ export default function ProductDetailPage({ productId, backLabel = 'رجوع', o
     }
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2500);
-  };
-
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href).catch(() => {});
-    setShared(true);
-    setTimeout(() => setShared(false), 2000);
   };
 
   if (loading) return <Skeleton />;
@@ -597,17 +591,6 @@ export default function ProductDetailPage({ productId, backLabel = 'رجوع', o
                 </div>
               ))}
             </div>
-            {/* Share / Copy link button */}
-            <button
-              onClick={handleShare}
-              className={`w-full h-10 rounded-xl font-medium text-sm flex items-center justify-center gap-2 border-2 transition-all duration-200 active:scale-[0.98] ${
-                shared
-                  ? 'border-emerald-200 bg-emerald-50 text-emerald-600'
-                  : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-600'
-              }`}
-            >
-              {shared ? <><Check className="w-4 h-4" /> تم نسخ الرابط!</> : <><Copy className="w-4 h-4" /> نسخ رابط المنتج</>}
-            </button>
           </div>
 
           {product.sku && (

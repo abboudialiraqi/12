@@ -12,6 +12,122 @@ type SettingsContextType = {
 
 const SettingsContext = createContext<SettingsContextType | null>(null);
 
+// ── Color utility ──────────────────────────────────────────────────
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const clean = hex.replace('#', '');
+  if (clean.length !== 6) return null;
+  return {
+    r: parseInt(clean.slice(0, 2), 16),
+    g: parseInt(clean.slice(2, 4), 16),
+    b: parseInt(clean.slice(4, 6), 16),
+  };
+}
+
+function mixWithWhite(r: number, g: number, b: number, amount: number): string {
+  return `rgb(${Math.round(r + (255 - r) * amount)},${Math.round(g + (255 - g) * amount)},${Math.round(b + (255 - b) * amount)})`;
+}
+
+function mixWithBlack(r: number, g: number, b: number, amount: number): string {
+  return `rgb(${Math.round(r * (1 - amount))},${Math.round(g * (1 - amount))},${Math.round(b * (1 - amount))})`;
+}
+
+function applyTheme(map: Settings) {
+  const primaryHex = map['site_primary_color'] || '#10b981';
+  const fontFamily = map['site_font_family'] || 'Tajawal';
+  const fontSize = map['site_font_size'] || 'medium';
+
+  // ── Font size ──
+  const fontSizes: Record<string, string> = { small: '14px', medium: '16px', large: '18px' };
+  document.documentElement.style.fontSize = fontSizes[fontSize] || '16px';
+
+  // ── Google Font loading ──
+  const prevLink = document.getElementById('dynamic-font');
+  if (prevLink) prevLink.remove();
+  if (fontFamily && fontFamily !== 'Tajawal') {
+    const link = document.createElement('link');
+    link.id = 'dynamic-font';
+    link.rel = 'stylesheet';
+    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}:wght@400;500;600;700;800&display=swap`;
+    document.head.appendChild(link);
+  }
+
+  // ── Primary color palette ──
+  const rgb = hexToRgb(primaryHex);
+  if (!rgb) return;
+  const { r, g, b } = rgb;
+  const p50  = mixWithWhite(r, g, b, 0.94);
+  const p100 = mixWithWhite(r, g, b, 0.87);
+  const p200 = mixWithWhite(r, g, b, 0.72);
+  const p300 = mixWithWhite(r, g, b, 0.55);
+  const p400 = mixWithWhite(r, g, b, 0.30);
+  const p600 = primaryHex;
+  const p700 = mixWithBlack(r, g, b, 0.13);
+  const p800 = mixWithBlack(r, g, b, 0.25);
+
+  let styleEl = document.getElementById('dynamic-theme') as HTMLStyleElement | null;
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = 'dynamic-theme';
+    document.head.appendChild(styleEl);
+  }
+
+  styleEl.textContent = `
+    :root {
+      --primary: ${p600};
+      --primary-50: ${p50};
+      --primary-100: ${p100};
+      --primary-200: ${p200};
+      --primary-300: ${p300};
+      --primary-400: ${p400};
+      --primary-600: ${p600};
+      --primary-700: ${p700};
+      --primary-800: ${p800};
+      --site-font: "${fontFamily}", "Tajawal", "Segoe UI", sans-serif;
+    }
+    html { font-family: var(--site-font) !important; }
+
+    /* ── Override Tailwind emerald utilities ── */
+    .bg-emerald-50  { background-color: var(--primary-50)  !important; }
+    .bg-emerald-100 { background-color: var(--primary-100) !important; }
+    .bg-emerald-200 { background-color: var(--primary-200) !important; }
+    .bg-emerald-400 { background-color: var(--primary-400) !important; }
+    .bg-emerald-600 { background-color: var(--primary-600) !important; }
+    .bg-emerald-700 { background-color: var(--primary-700) !important; }
+
+    .text-emerald-400 { color: var(--primary-400) !important; }
+    .text-emerald-500 { color: var(--primary-600) !important; }
+    .text-emerald-600 { color: var(--primary-600) !important; }
+    .text-emerald-700 { color: var(--primary-700) !important; }
+
+    .border-emerald-100 { border-color: var(--primary-100) !important; }
+    .border-emerald-200 { border-color: var(--primary-200) !important; }
+    .border-emerald-300 { border-color: var(--primary-300) !important; }
+    .border-emerald-400 { border-color: var(--primary-400) !important; }
+    .border-emerald-500 { border-color: var(--primary-600) !important; }
+    .border-emerald-600 { border-color: var(--primary-600) !important; }
+
+    .ring-emerald-300 { --tw-ring-color: var(--primary-300) !important; }
+    .focus\\:ring-emerald-500:focus { --tw-ring-color: var(--primary-600) !important; }
+    .focus\\:border-emerald-500:focus { border-color: var(--primary-600) !important; }
+
+    .hover\\:bg-emerald-50:hover  { background-color: var(--primary-50)  !important; }
+    .hover\\:bg-emerald-100:hover { background-color: var(--primary-100) !important; }
+    .hover\\:bg-emerald-700:hover { background-color: var(--primary-700) !important; }
+    .hover\\:text-emerald-600:hover { color: var(--primary-600) !important; }
+    .hover\\:text-emerald-700:hover { color: var(--primary-700) !important; }
+    .hover\\:border-emerald-200:hover { border-color: var(--primary-200) !important; }
+    .hover\\:border-emerald-400:hover { border-color: var(--primary-400) !important; }
+
+    .from-emerald-100 { --tw-gradient-from: var(--primary-100) !important; }
+    .to-teal-100      { --tw-gradient-to:   var(--primary-200) !important; }
+    .from-emerald-600 { --tw-gradient-from: var(--primary-600) !important; }
+    .to-teal-700      { --tw-gradient-to:   var(--primary-700) !important; }
+
+    .divide-emerald-100 > * + * { border-color: var(--primary-100) !important; }
+  `;
+}
+
+// ── Provider ───────────────────────────────────────────────────────
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>({});
   const [loading, setLoading] = useState(true);
@@ -25,7 +141,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setSettings(map);
     setLoading(false);
 
-    // Update OG/meta tags dynamically from settings
+    // Apply theme (colors + font)
+    applyTheme(map);
+
+    // Update OG/meta tags
     const logoUrl = map['store_logo_url'];
     const storeName = map['store_name'];
     if (logoUrl) {

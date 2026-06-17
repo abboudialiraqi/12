@@ -316,20 +316,34 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
                       title={hasChildren ? 'اضغط مرة للاقسام الفرعية، مرتين للذهاب للقسم' : undefined}
                       className="flex flex-col items-center gap-2.5 group shrink-0"
                     >
-                      <div className={`w-16 h-16 rounded-full overflow-hidden border-2 transition-all duration-200 shadow-sm group-hover:shadow-md group-hover:scale-105 ${
-                        isActive ? 'border-emerald-500 ring-2 ring-emerald-300 ring-offset-1' : 'border-gray-100 group-hover:border-emerald-400'
-                      }`}>
+                      <div
+                        className={`w-16 h-16 rounded-full overflow-hidden border-2 transition-all duration-200 shadow-sm group-hover:shadow-md group-hover:scale-105 ${
+                          isActive ? 'ring-2 ring-offset-1' : 'border-gray-100'
+                        }`}
+                        style={isActive && (cat as any).color ? { borderColor: (cat as any).color, '--tw-ring-color': (cat as any).color } as React.CSSProperties : undefined}
+                      >
                         {cat.image_url ? (
                           <img src={cat.image_url} alt={cat.name} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center">
-                            <span className="text-2xl font-bold text-emerald-600">{cat.name.charAt(0)}</span>
+                          <div
+                            className="w-full h-full flex items-center justify-center"
+                            style={(cat as any).color
+                              ? { background: `linear-gradient(135deg, ${(cat as any).color}22, ${(cat as any).color}44)` }
+                              : undefined}
+                          >
+                            <span
+                              className="text-2xl font-bold"
+                              style={{ color: (cat as any).color || undefined }}
+                            >{cat.name.charAt(0)}</span>
                           </div>
                         )}
                       </div>
-                      <span className={`text-xs font-medium transition-colors text-center max-w-[72px] leading-tight ${
-                        isActive ? 'text-emerald-600' : 'text-gray-700 group-hover:text-emerald-600'
-                      }`}>
+                      <span
+                        className={`text-xs font-medium transition-colors text-center max-w-[72px] leading-tight ${
+                          isActive ? '' : 'text-gray-700'
+                        }`}
+                        style={isActive && (cat as any).color ? { color: (cat as any).color } : undefined}
+                      >
                         {cat.name}
                         {hasChildren && <span className="block text-[9px] text-gray-400">اضغط للاقسام</span>}
                       </span>

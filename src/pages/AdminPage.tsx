@@ -81,6 +81,7 @@ type CategoryForm = {
   image_url: string;
   sort_order: string;
   parent_id: string;
+  color: string;
 };
 
 const emptyCategoryForm: CategoryForm = {
@@ -90,9 +91,21 @@ const emptyCategoryForm: CategoryForm = {
   image_url: '',
   sort_order: '0',
   parent_id: '',
+  color: '',
 };
 
-type SettingField = { key: string; label: string; type?: 'text' | 'textarea'; ltr?: boolean; placeholder?: string };
+type SettingField = {
+  key: string;
+  label: string;
+  type?: 'text' | 'textarea' | 'color' | 'select' | 'range';
+  ltr?: boolean;
+  placeholder?: string;
+  options?: { value: string; label: string }[];
+  min?: number;
+  max?: number;
+  step?: number;
+  unit?: string;
+};
 type SettingSection = { id: string; label: string; desc: string; icon: React.ComponentType<{ className?: string }>; color: string; fields: SettingField[] };
 
 const SETTING_SECTIONS: SettingSection[] = [
@@ -213,19 +226,46 @@ const SETTING_SECTIONS: SettingSection[] = [
   },
   {
     id: 'appearance',
-    label: 'المظهر والألوان',
-    desc: 'تخصيص ألوان ومظهر الموقع',
+    label: 'الألوان والخطوط',
+    desc: 'تخصيص ألوان وخطوط وأحجام الموقع',
     icon: Star,
     color: 'text-violet-600 bg-violet-50',
     fields: [
-      { key: 'site_primary_color',   label: 'اللون الرئيسي (Hex)',           placeholder: '#10b981', ltr: true },
-      { key: 'site_announcement',    label: 'إعلان في شريط أعلى الموقع',    placeholder: 'توصيل مجاني للطلبات فوق 100,000 د.ع' },
+      { key: 'site_primary_color', label: 'اللون الرئيسي للموقع', type: 'color', placeholder: '#10b981', ltr: true },
+      {
+        key: 'site_font_family',
+        label: 'نوع الخط',
+        type: 'select',
+        options: [
+          { value: 'Tajawal',     label: 'تجوال (افتراضي)' },
+          { value: 'Cairo',       label: 'القاهرة' },
+          { value: 'Noto Naskh Arabic', label: 'نوتو نسخ' },
+          { value: 'Amiri',       label: 'أميري (خط كلاسيكي)' },
+          { value: 'Changa',      label: 'تشانجا (عصري)' },
+          { value: 'Almarai',     label: 'المرعي' },
+          { value: 'El Messiri',  label: 'المسيري' },
+          { value: 'Lateef',      label: 'لطيف' },
+          { value: 'Mada',        label: 'مدى' },
+          { value: 'Reem Kufi',   label: 'ريم كوفي' },
+        ],
+      },
+      {
+        key: 'site_font_size',
+        label: 'حجم الخط',
+        type: 'select',
+        options: [
+          { value: 'small',  label: 'صغير' },
+          { value: 'medium', label: 'متوسط (افتراضي)' },
+          { value: 'large',  label: 'كبير' },
+        ],
+      },
+      { key: 'site_announcement',        label: 'نص الشريط الإعلاني أعلى الموقع',      placeholder: 'توصيل مجاني للطلبات فوق 100,000 د.ع' },
       { key: 'site_announcement_active', label: 'تفعيل الشريط الإعلاني (1=نعم / 0=لا)', placeholder: '1', ltr: true },
-      { key: 'hero_stats_products',  label: 'إحصائية: عدد المنتجات',        placeholder: '500+',  ltr: true },
-      { key: 'hero_stats_customers', label: 'إحصائية: عدد العملاء',         placeholder: '10K+',  ltr: true },
-      { key: 'hero_stats_discount',  label: 'إحصائية: أقصى خصم',           placeholder: '30%',   ltr: true },
-      { key: 'hero_stats_delivery',  label: 'إحصائية: مدة التوصيل',        placeholder: '24h',   ltr: true },
-      { key: 'show_stock_count', label: 'عرض عدد المخزون للزبون (1=نعم / 0=لا)', placeholder: '0', ltr: true },
+      { key: 'hero_stats_products',      label: 'إحصائية: عدد المنتجات',               placeholder: '500+',  ltr: true },
+      { key: 'hero_stats_customers',     label: 'إحصائية: عدد العملاء',                placeholder: '10K+',  ltr: true },
+      { key: 'hero_stats_discount',      label: 'إحصائية: أقصى خصم',                  placeholder: '30%',   ltr: true },
+      { key: 'hero_stats_delivery',      label: 'إحصائية: مدة التوصيل',               placeholder: '24h',   ltr: true },
+      { key: 'show_stock_count',         label: 'عرض عدد المخزون للزبون (1=نعم / 0=لا)', placeholder: '0', ltr: true },
     ],
   },
   {
@@ -235,14 +275,24 @@ const SETTING_SECTIONS: SettingSection[] = [
     icon: Star,
     color: 'text-teal-600 bg-teal-50',
     fields: [
-      { key: 'grid_mobile_cols',   label: 'عدد أعمدة المنتجات في الموبايل (1 أو 2)', placeholder: '2', ltr: true },
-      { key: 'grid_desktop_cols',  label: 'عدد أعمدة المنتجات في الحاسوب (3 أو 4 أو 5)', placeholder: '4', ltr: true },
+      {
+        key: 'grid_mobile_cols',
+        label: 'عدد أعمدة المنتجات — موبايل',
+        type: 'select',
+        options: [{ value: '1', label: 'عمود واحد' }, { value: '2', label: 'عمودان (افتراضي)' }],
+      },
+      {
+        key: 'grid_desktop_cols',
+        label: 'عدد أعمدة المنتجات — حاسوب',
+        type: 'select',
+        options: [{ value: '3', label: '3 أعمدة' }, { value: '4', label: '4 أعمدة (افتراضي)' }, { value: '5', label: '5 أعمدة' }],
+      },
+      { key: 'hero_min_height_mobile',  label: 'ارتفاع البنر الرئيسي — موبايل (px)', placeholder: '320', ltr: true, type: 'range', min: 200, max: 700, step: 10, unit: 'px' },
+      { key: 'hero_min_height_desktop', label: 'ارتفاع البنر الرئيسي — حاسوب (px)', placeholder: '500', ltr: true, type: 'range', min: 300, max: 900, step: 10, unit: 'px' },
       { key: 'card_mobile_w',      label: 'عرض بطاقة مشاركات الزبائن - موبايل (px)', placeholder: '140', ltr: true },
       { key: 'card_mobile_h',      label: 'ارتفاع بطاقة مشاركات الزبائن - موبايل (px)', placeholder: '220', ltr: true },
       { key: 'card_desktop_w',     label: 'عرض بطاقة مشاركات الزبائن - حاسوب (px)', placeholder: '180', ltr: true },
       { key: 'card_desktop_h',     label: 'ارتفاع بطاقة مشاركات الزبائن - حاسوب (px)', placeholder: '280', ltr: true },
-      { key: 'hero_min_height_mobile',  label: 'الحد الأدنى لارتفاع الهيرو - موبايل (px)', placeholder: '320', ltr: true },
-      { key: 'hero_min_height_desktop', label: 'الحد الأدنى لارتفاع الهيرو - حاسوب (px)', placeholder: '500', ltr: true },
     ],
   },
   {
@@ -616,6 +666,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
         image_url: categoryForm.image_url,
         sort_order: parseInt(categoryForm.sort_order) || 0,
         parent_id: categoryForm.parent_id || null,
+        color: categoryForm.color || null,
       };
       if (editingCategoryId) {
         const { error } = await supabase.from('categories').update(data).eq('id', editingCategoryId);
@@ -656,6 +707,7 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
       image_url: cat.image_url || '',
       sort_order: cat.sort_order?.toString() || '0',
       parent_id: cat.parent_id || '',
+      color: (cat as any).color || '',
     });
     setShowCategoryForm(true);
   };
@@ -1616,6 +1668,30 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                         placeholder="https://images.pexels.com/..."
                         dir="ltr"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">لون القسم (اختياري)</label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="color"
+                          value={categoryForm.color || '#10b981'}
+                          onChange={e => setCategoryForm(prev => ({ ...prev, color: e.target.value }))}
+                          className="w-10 h-10 rounded-xl border border-gray-200 cursor-pointer p-0.5 bg-white"
+                        />
+                        <input
+                          value={categoryForm.color}
+                          onChange={e => setCategoryForm(prev => ({ ...prev, color: e.target.value }))}
+                          className="flex-1 px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
+                          placeholder="#10b981 (اتركه فارغاً للون الافتراضي)"
+                          dir="ltr"
+                        />
+                        {categoryForm.color && (
+                          <div className="w-9 h-9 rounded-xl border border-gray-200 shrink-0" style={{ backgroundColor: categoryForm.color }} />
+                        )}
+                        {categoryForm.color && (
+                          <button onClick={() => setCategoryForm(prev => ({ ...prev, color: '' }))} className="text-xs text-gray-400 hover:text-red-500">حذف</button>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="flex gap-3 mt-6 pt-4 border-t border-gray-100">
@@ -2717,6 +2793,68 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                             placeholder={field.placeholder}
                             className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none transition-shadow"
                           />
+                        ) : field.type === 'color' ? (
+                          <div className="flex items-center gap-3">
+                            <div className="relative">
+                              <input
+                                type="color"
+                                value={settingsForm[field.key] || '#10b981'}
+                                onChange={e => setSettingsForm(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                className="w-12 h-10 rounded-xl border border-gray-200 cursor-pointer p-0.5 bg-white"
+                              />
+                            </div>
+                            <input
+                              value={settingsForm[field.key] ?? ''}
+                              onChange={e => setSettingsForm(prev => ({ ...prev, [field.key]: e.target.value }))}
+                              placeholder={field.placeholder || '#10b981'}
+                              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-shadow font-mono"
+                              dir="ltr"
+                            />
+                            {settingsForm[field.key] && (
+                              <div
+                                className="w-10 h-10 rounded-xl border border-gray-200 shrink-0"
+                                style={{ backgroundColor: settingsForm[field.key] }}
+                              />
+                            )}
+                          </div>
+                        ) : field.type === 'select' && field.options ? (
+                          <select
+                            value={settingsForm[field.key] ?? ''}
+                            onChange={e => setSettingsForm(prev => ({ ...prev, [field.key]: e.target.value }))}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-shadow bg-white"
+                          >
+                            <option value="">— اختر —</option>
+                            {field.options.map(opt => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
+                        ) : field.type === 'range' ? (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="range"
+                                min={field.min ?? 0}
+                                max={field.max ?? 1000}
+                                step={field.step ?? 1}
+                                value={settingsForm[field.key] ?? field.placeholder ?? field.min ?? 0}
+                                onChange={e => setSettingsForm(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                className="flex-1 accent-emerald-600"
+                              />
+                              <div className="flex items-center gap-1 min-w-[80px]">
+                                <input
+                                  type="number"
+                                  min={field.min}
+                                  max={field.max}
+                                  step={field.step ?? 1}
+                                  value={settingsForm[field.key] ?? field.placeholder ?? ''}
+                                  onChange={e => setSettingsForm(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                  className="w-16 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                  dir="ltr"
+                                />
+                                {field.unit && <span className="text-xs text-gray-400">{field.unit}</span>}
+                              </div>
+                            </div>
+                          </div>
                         ) : (
                           <input
                             value={settingsForm[field.key] ?? ''}
