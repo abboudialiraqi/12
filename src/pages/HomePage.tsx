@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   ArrowLeft, Sparkles, Star,
   ChevronLeft, ChevronRight, TrendingUp, Zap, Shield, Truck, Headphones, Award
@@ -60,9 +60,20 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
     fetchData();
   }, []);
 
+  // Build inline gradient from hex color settings, falling back to Tailwind class names
+  function bannerGradient(fromHex: string, toHex: string, tailwindFallback: string): { style?: React.CSSProperties; className?: string } {
+    if (fromHex && toHex) {
+      return { style: { background: `linear-gradient(to left, ${fromHex}, ${toHex})` } };
+    }
+    if (fromHex) {
+      return { style: { background: `linear-gradient(to left, ${fromHex}, ${fromHex}cc)` } };
+    }
+    return { className: `bg-gradient-to-l ${tailwindFallback}` };
+  }
+
   const banners = [
     {
-      bg:        get('banner1_bg',        'from-emerald-600 to-teal-700'),
+      gradient:  bannerGradient(get('banner1_color_from', ''), get('banner1_color_to', ''), get('banner1_bg', 'from-emerald-600 to-teal-700')),
       badge:     get('hero_badge',        'عروض حصرية تصل إلى 30%'),
       title:     get('hero_title',        'كل ما تحتاجه'),
       highlight: get('hero_title_highlight', 'للإبداع والتعلم'),
@@ -70,7 +81,7 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
       img:       get('banner1_img',       'https://images.pexels.com/photos/6197983/pexels-photo-6197983.jpeg?w=1200&auto=compress'),
     },
     {
-      bg:        get('banner2_bg',        'from-sky-700 to-blue-800'),
+      gradient:  bannerGradient(get('banner2_color_from', ''), get('banner2_color_to', ''), get('banner2_bg', 'from-sky-700 to-blue-800')),
       badge:     get('banner2_badge',     'وصل حديثاً'),
       title:     get('banner2_title',     'منتجات جديدة'),
       highlight: get('banner2_highlight', 'كل أسبوع'),
@@ -78,7 +89,7 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
       img:       get('banner2_img',       'https://images.pexels.com/photos/6927041/pexels-photo-6927041.jpeg?w=1200&auto=compress'),
     },
     {
-      bg:        get('banner3_bg',        'from-amber-600 to-orange-700'),
+      gradient:  bannerGradient(get('banner3_color_from', ''), get('banner3_color_to', ''), get('banner3_bg', 'from-amber-600 to-orange-700')),
       badge:     get('banner3_badge',     'عرض محدود'),
       title:     get('banner3_title',     'خصومات على'),
       highlight: get('banner3_highlight', 'أدوات هندسية'),
@@ -229,7 +240,10 @@ export default function HomePage({ onNavigate, onCategorySelect, onViewDetail, o
           {banner.img && (
             <img src={banner.img} alt="" className="w-full h-full object-cover" />
           )}
-          <div className={`absolute inset-0 bg-gradient-to-l ${banner.bg} ${banner.img ? 'opacity-75' : 'opacity-100'}`} />
+          <div
+            className={`absolute inset-0 ${banner.gradient.className ?? ''} ${banner.img ? 'opacity-75' : 'opacity-100'}`}
+            style={banner.gradient.style}
+          />
           <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/20 to-transparent" />
         </div>
 
