@@ -344,7 +344,7 @@ export default function ProductDetailPage({ productId, backLabel = 'رجوع', o
           {/* Price */}
           <div className="bg-gray-50 rounded-2xl px-5 py-4 border border-gray-100">
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-gray-900 tabular-nums">
+              <span className="text-4xl font-bold text-gray-900 text-price-custom tabular-nums">
                 {(product.price * quantity).toLocaleString()}
               </span>
               <span className="text-lg text-gray-400 font-medium">د.ع</span>

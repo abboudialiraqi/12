@@ -85,7 +85,7 @@ export default function Header({ currentPage, onNavigate, onSearch, selectedCate
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm site-header-bg">
         {/* ── Animated Ticker Bar ── */}
         <div className="bg-emerald-600 text-white overflow-hidden py-1.5 select-none">
           <div className="animate-ticker whitespace-nowrap" style={{ display: 'inline-flex', minWidth: '200%' }}>

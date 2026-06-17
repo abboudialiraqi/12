@@ -32,9 +32,19 @@ function mixWithBlack(r: number, g: number, b: number, amount: number): string {
 }
 
 function applyTheme(map: Settings) {
-  const primaryHex = map['site_primary_color'] || '#10b981';
-  const fontFamily = map['site_font_family'] || 'Tajawal';
-  const fontSize = map['site_font_size'] || 'medium';
+  const primaryHex  = map['site_primary_color'] || '#10b981';
+  const fontFamily  = map['site_font_family']   || 'Tajawal';
+  const fontSize    = map['site_font_size']      || 'medium';
+
+  // Text colors (empty = keep default)
+  const cHeading   = map['color_text_heading']   || '';
+  const cBody      = map['color_text_body']      || '';
+  const cSecondary = map['color_text_secondary'] || '';
+  const cMuted     = map['color_text_muted']     || '';
+  const cPrice     = map['color_text_price']     || '';
+  const cPageBg    = map['color_page_bg']        || '';
+  const cNavBg     = map['color_nav_bg']         || '';
+  const cCardBg    = map['color_card_bg']        || '';
 
   // ── Font size ──
   const fontSizes: Record<string, string> = { small: '14px', medium: '16px', large: '18px' };
@@ -124,6 +134,27 @@ function applyTheme(map: Settings) {
     .to-teal-700      { --tw-gradient-to:   var(--primary-700) !important; }
 
     .divide-emerald-100 > * + * { border-color: var(--primary-100) !important; }
+
+    /* ── Text color overrides (only when set) ── */
+    ${cHeading   ? `.text-gray-900 { color: ${cHeading} !important; }
+    .text-gray-800 { color: ${cHeading} !important; }` : ''}
+
+    ${cBody      ? `.text-gray-700 { color: ${cBody} !important; }` : ''}
+
+    ${cSecondary ? `.text-gray-600 { color: ${cSecondary} !important; }` : ''}
+
+    ${cMuted     ? `.text-gray-500 { color: ${cMuted} !important; }
+    .text-gray-400 { color: ${cMuted}; }` : ''}
+
+    ${cPrice     ? `.text-price-custom { color: ${cPrice} !important; }` : ''}
+
+    /* ── Background overrides ── */
+    ${cPageBg    ? `body { background-color: ${cPageBg} !important; }
+    .bg-gray-50  { background-color: ${cPageBg} !important; }` : ''}
+
+    ${cNavBg     ? `.site-header-bg { background-color: ${cNavBg} !important; }` : ''}
+
+    ${cCardBg    ? `.bg-white { background-color: ${cCardBg} !important; }` : ''}
   `;
 }
 

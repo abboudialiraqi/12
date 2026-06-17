@@ -225,13 +225,30 @@ const SETTING_SECTIONS: SettingSection[] = [
     ],
   },
   {
+    id: 'text_colors',
+    label: 'ألوان النصوص',
+    desc: 'تحكم بلون كل نوع نص في الموقع',
+    icon: Star,
+    color: 'text-rose-600 bg-rose-50',
+    fields: [
+      { key: 'color_text_heading',   label: 'لون العناوين الرئيسية (أسماء المنتجات، العناوين الكبيرة)', type: 'color' },
+      { key: 'color_text_body',      label: 'لون نصوص المحتوى (الأوصاف، النصوص المتوسطة)',            type: 'color' },
+      { key: 'color_text_secondary', label: 'لون النصوص الفرعية (التفاصيل الصغيرة)',                  type: 'color' },
+      { key: 'color_text_muted',     label: 'لون النصوص الخافتة (التواريخ، المساعدة)',                type: 'color' },
+      { key: 'color_text_price',     label: 'لون الأسعار',                                            type: 'color' },
+      { key: 'color_page_bg',        label: 'لون خلفية الصفحة',                                       type: 'color' },
+      { key: 'color_nav_bg',         label: 'لون خلفية شريط التنقل (النافبار)',                        type: 'color' },
+      { key: 'color_card_bg',        label: 'لون خلفية البطاقات والنوافذ البيضاء',                     type: 'color' },
+    ],
+  },
+  {
     id: 'appearance',
-    label: 'الألوان والخطوط',
-    desc: 'تخصيص ألوان وخطوط وأحجام الموقع',
+    label: 'اللون الرئيسي والخطوط',
+    desc: 'تخصيص اللون الرئيسي وخطوط وأحجام الموقع',
     icon: Star,
     color: 'text-violet-600 bg-violet-50',
     fields: [
-      { key: 'site_primary_color', label: 'اللون الرئيسي للموقع', type: 'color', placeholder: '#10b981', ltr: true },
+      { key: 'site_primary_color', label: 'اللون الرئيسي للموقع (الأزرار والروابط)', type: 'color', placeholder: '#10b981', ltr: true },
       {
         key: 'site_font_family',
         label: 'نوع الخط',
@@ -2794,28 +2811,40 @@ export default function AdminPage({ onNavigate }: AdminPageProps) {
                             className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none transition-shadow"
                           />
                         ) : field.type === 'color' ? (
-                          <div className="flex items-center gap-3">
-                            <div className="relative">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-3">
                               <input
                                 type="color"
-                                value={settingsForm[field.key] || '#10b981'}
+                                value={settingsForm[field.key] || '#111827'}
                                 onChange={e => setSettingsForm(prev => ({ ...prev, [field.key]: e.target.value }))}
-                                className="w-12 h-10 rounded-xl border border-gray-200 cursor-pointer p-0.5 bg-white"
+                                className="w-12 h-11 rounded-xl border-2 border-gray-200 cursor-pointer p-0.5 bg-white"
                               />
+                              <input
+                                value={settingsForm[field.key] ?? ''}
+                                onChange={e => setSettingsForm(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                placeholder={field.placeholder || 'اختر لوناً أو اكتب #hex'}
+                                className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-shadow font-mono"
+                                dir="ltr"
+                              />
+                              {settingsForm[field.key] ? (
+                                <>
+                                  <div
+                                    className="w-11 h-11 rounded-xl border-2 border-gray-200 shrink-0 shadow-sm"
+                                    style={{ backgroundColor: settingsForm[field.key] }}
+                                    title="معاينة اللون"
+                                  />
+                                  <button
+                                    onClick={() => setSettingsForm(prev => ({ ...prev, [field.key]: '' }))}
+                                    className="px-3 py-2 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 border border-red-200 rounded-xl transition-colors shrink-0"
+                                    title="إعادة للون الافتراضي"
+                                  >
+                                    إعادة
+                                  </button>
+                                </>
+                              ) : (
+                                <span className="text-xs text-gray-400 shrink-0">افتراضي</span>
+                              )}
                             </div>
-                            <input
-                              value={settingsForm[field.key] ?? ''}
-                              onChange={e => setSettingsForm(prev => ({ ...prev, [field.key]: e.target.value }))}
-                              placeholder={field.placeholder || '#10b981'}
-                              className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-shadow font-mono"
-                              dir="ltr"
-                            />
-                            {settingsForm[field.key] && (
-                              <div
-                                className="w-10 h-10 rounded-xl border border-gray-200 shrink-0"
-                                style={{ backgroundColor: settingsForm[field.key] }}
-                              />
-                            )}
                           </div>
                         ) : field.type === 'select' && field.options ? (
                           <select

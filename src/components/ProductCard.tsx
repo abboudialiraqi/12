@@ -181,7 +181,7 @@ export default function ProductCard({ product, onViewDetail }: ProductCardProps)
         <div className="flex items-end justify-between pt-1 gap-2">
           <div>
             <div className="flex items-baseline gap-1">
-              <span className="text-base font-bold text-gray-900 tabular-nums">{product.price.toLocaleString()}</span>
+              <span className="text-base font-bold text-gray-900 text-price-custom tabular-nums">{product.price.toLocaleString()}</span>
               <span className="text-xs text-gray-400">د.ع</span>
             </div>
             {hasDiscount && (
